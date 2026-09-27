@@ -1,3 +1,5 @@
+import "server-only";
+
 import { SignJWT, jwtVerify } from "jose";
 
 // Passport's own session support (`serializeUser`/`deserializeUser`) is

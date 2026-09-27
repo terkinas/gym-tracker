@@ -1,0 +1,20 @@
+[build]
+  # Netlify auto-detects and builds this as a Next.js site (zero-config
+  # Next.js Runtime) — no [[plugins]]/publish override needed here.
+  #
+  # `rm -rf .next/cache` runs *after* `next build` has already produced the
+  # real build output (server chunks, static assets, prerendered pages).
+  # The Turbopack persistent cache under .next/cache/turbopack/**/*.sst is a
+  # local build-acceleration artifact only: Next.js doesn't read it at
+  # runtime (`next start`), and the Next.js Runtime doesn't need it to build
+  # the deployed functions. It has been found to contain a literal snapshot
+  # of environment variables read during the build (kept for build-to-build
+  # cache invalidation), which is what tripped secrets scanning here.
+  # Deleting it post-build means that snapshot never exists at the point
+  # Netlify packages/scans the output for deploy — nothing is hidden from
+  # the scanner, the secret's literal value simply never reaches disk in
+  # anything that ships.
+  command = "npm run build && rm -rf .next/cache"
+
+[build.environment]
+  NODE_VERSION = "20"
