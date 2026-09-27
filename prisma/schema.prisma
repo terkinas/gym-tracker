@@ -1,0 +1,117 @@
+// Prisma schema for GymTracker.
+//
+// Mirrors the data model that currently lives in data/users.json,
+// data/exercises.json and data/workouts.json (see lib/types/workout.ts and
+// lib/exercises.ts for the TypeScript shapes this was derived from).
+//
+// Notes on deliberate deviations from a "one field per JSON property" model:
+//
+// - `WorkoutExercise.position` / `WorkoutSet.position` are NOT present in
+//   the JSON types. They exist purely so Postgres can reproduce the JSON
+//   array order (arrays are ordered; SQL rows are not, without an ORDER BY
+//   column). The storage layer sets these on write and always orders by
+//   them on read, so this is invisible to the rest of the app.
+//
+// - `Exercise.category` is stored as plain text (the Lithuanian values
+//   themselves — "Krūtinė", "Pečiai", ...), NOT a Prisma enum. Section 7 of
+//   the brief requires the stored values to stay exactly as they are today;
+//   an enum would still satisfy that, but would also require a migration
+//   every time a category is renamed and gives no benefit over a validated
+//   TS union (lib/exercises.ts already restricts this at the type level).
+//
+// - `WorkoutExercise.exerciseId` intentionally has NO foreign key to
+//   Exercise. This preserves current behavior exactly: deleting an exercise
+//   today (lib/storage/exercises.ts -> deleteExercise) always succeeds and
+//   simply leaves past workout entries pointing at an id that no longer
+//   resolves to an exercise — the JSON files have no referential integrity.
+//   A real FK would force a choice that changes behavior either way:
+//   RESTRICT would make "delete exercise" fail once it's been used in a
+//   workout (it doesn't today), and CASCADE would silently delete historical
+//   set/volume data out of past workouts (analytics currently keeps it).
+//   Ownership is already enforced in lib/actions/workouts.ts before a
+//   reference is ever written, so this is safe. See the final report for
+//   how to opt into a real FK instead, if that's preferred going forward.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  exercises Exercise[]
+  workouts  Workout[]
+
+  @@map("users")
+}
+
+model Exercise {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  category  String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("exercises")
+}
+
+model Workout {
+  id        String   @id @default(uuid())
+  userId    String
+  /// YYYY-MM-DD, e.g. "2026-09-26" — see lib/date.ts. Stored as text (not
+  /// DateTime) because the app only ever handles calendar dates, never
+  /// times, and comparing/sorting these strings lexicographically already
+  /// matches chronological order.
+  date      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("workouts")
+}
+
+model WorkoutExercise {
+  id         String @id @default(uuid())
+  workoutId  String
+  exerciseId String
+  /// Preserves the order exercises were added to the workout (see schema
+  /// header note). Set by the storage layer, not user-facing.
+  position   Int    @default(0)
+
+  workout Workout      @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  sets    WorkoutSet[]
+
+  @@index([workoutId])
+  @@index([exerciseId])
+  @@map("workout_exercises")
+}
+
+model WorkoutSet {
+  id                String @id @default(uuid())
+  workoutExerciseId String
+  weight            Float
+  reps              Int
+  /// Preserves set order within an exercise (see schema header note).
+  position          Int    @default(0)
+
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([workoutExerciseId])
+  @@map("workout_sets")
+}
