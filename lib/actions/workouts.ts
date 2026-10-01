@@ -5,8 +5,11 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/dal";
 import { getTodayDateString } from "@/lib/date";
 import { getExercisesForUser } from "@/lib/storage/exercises";
-import { createOrUpdateWorkout } from "@/lib/storage/workouts";
-import type { Workout, WorkoutExercise, WorkoutSet } from "@/lib/types/workout";
+import {
+  createOrUpdateWorkout,
+  setWorkoutExerciseCompleted,
+} from "@/lib/storage/workouts";
+import { isSetHand, type SetHand, type Workout, type WorkoutExercise, type WorkoutSet } from "@/lib/types/workout";
 
 // Shape as it arrives from the client. Numbers are still untrusted input —
 // they may be missing, NaN, negative, or non-integer — so every field is
@@ -15,10 +18,15 @@ export type SaveWorkoutSetInput = {
   id: string;
   weight: number;
   reps: number;
+  /** "left" | "right" | null; ignored (stored as null) for exercises that
+   * aren't one-handed. Untrusted — validated below. */
+  hand?: SetHand | null;
 };
 
 export type SaveWorkoutExerciseInput = {
   exerciseId: string;
+  /** Optional for backwards compatibility; anything but `true` means false. */
+  completed?: boolean;
   sets: SaveWorkoutSetInput[];
 };
 
@@ -46,6 +54,9 @@ export async function saveWorkoutAction(
 
   const userExercises = await getExercisesForUser(user.id);
   const userExerciseIds = new Set(userExercises.map((exercise) => exercise.id));
+  const oneHandedIds = new Set(
+    userExercises.filter((exercise) => exercise.isOneHanded).map((exercise) => exercise.id),
+  );
 
   const seenExerciseIds = new Set<string>();
   const validatedExercises: WorkoutExercise[] = [];
@@ -77,14 +88,26 @@ export async function saveWorkoutAction(
         throw new Error("INVALID_REPS");
       }
 
+      // Only null / "left" / "right" are ever accepted.
+      if (set.hand !== undefined && set.hand !== null && !isSetHand(set.hand)) {
+        throw new Error("INVALID_HAND");
+      }
+
       return {
         id: typeof set.id === "string" && set.id.length > 0 ? set.id : crypto.randomUUID(),
         weight: set.weight,
         reps: set.reps,
+        // A hand is only stored for one-handed exercises (normalized to null
+        // for all others); legacy/unchosen one-handed sets stay null.
+        hand: oneHandedIds.has(exercise.exerciseId) && isSetHand(set.hand) ? set.hand : null,
       };
     });
 
-    validatedExercises.push({ exerciseId: exercise.exerciseId, sets: validatedSets });
+    validatedExercises.push({
+      exerciseId: exercise.exerciseId,
+      completed: exercise.completed === true,
+      sets: validatedSets,
+    });
   }
 
   const workout = await createOrUpdateWorkout(user.id, {
@@ -95,4 +118,34 @@ export async function saveWorkoutAction(
   revalidatePath("/treniruote");
 
   return workout;
+}
+
+/** Persists the "I'm done with this exercise" state for today's workout of
+ * the authenticated user. Scoped by session user + server-side date, so a
+ * client can never flip another user's workout exercise. Returns whether the
+ * exercise was already saved in today's workout; if not, nothing is written
+ * (no autosave) and the client sends `completed` with its next explicit save. */
+export async function setExerciseCompletedAction(
+  exerciseId: string,
+  completed: boolean,
+): Promise<{ persisted: boolean }> {
+  const user = await requireUser();
+
+  if (typeof exerciseId !== "string" || exerciseId.length === 0) {
+    throw new Error("INVALID_EXERCISE");
+  }
+  if (typeof completed !== "boolean") {
+    throw new Error("INVALID_COMPLETED");
+  }
+
+  const persisted = await setWorkoutExerciseCompleted(
+    user.id,
+    getTodayDateString(),
+    exerciseId,
+    completed,
+  );
+
+  if (persisted) revalidatePath("/treniruote");
+
+  return { persisted };
 }

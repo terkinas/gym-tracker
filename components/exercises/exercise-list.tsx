@@ -17,7 +17,7 @@ import {
 import {
   EXERCISE_CATEGORIES,
   type Exercise,
-  type ExerciseCategory,
+  type ExerciseInput,
 } from "@/lib/exercises";
 import { useTranslations } from "@/lib/i18n/locale-context";
 import { translateCategory } from "@/lib/i18n/categories";
@@ -63,7 +63,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
       )
     : EXERCISE_CATEGORIES;
 
-  async function handleAddExercise(values: { name: string; category: ExerciseCategory }) {
+  async function handleAddExercise(values: ExerciseInput) {
     try {
       const exercise = await createExerciseAction(values);
       setExercises((current) => [...current, exercise]);
@@ -93,7 +93,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
 
   async function handleUpdateExercise(
     id: string,
-    values: { name: string; category: ExerciseCategory },
+    values: ExerciseInput,
   ) {
     try {
       const updated = await updateExerciseAction(id, values);

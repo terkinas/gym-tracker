@@ -76,3 +76,37 @@ export function pluralize(
 
   return count === 1 ? singular : plural;
 }
+
+/** Three-form variant for Lithuanian nouns, which distinguish 1 / 2–9 /
+ * 10–20 (e.g. 1 pratimas, 2 pratimai, 10 pratimų, 21 pratimas). English
+ * uses `[one, other, other]`. Kept separate from `pluralize()` so existing
+ * two-form callers are unaffected. */
+export function pluralizeThree(
+  locale: Locale,
+  count: number,
+  forms: readonly [string, string, string],
+): string {
+  const [one, few, many] = forms;
+
+  if (locale === "lt") {
+    const mod100 = count % 100;
+    if (mod100 >= 11 && mod100 <= 19) return many;
+    const mod10 = count % 10;
+    if (mod10 === 1) return one;
+    if (mod10 === 0) return many;
+    return few;
+  }
+
+  return count === 1 ? one : few;
+}
+
+/** Signed percentage with one decimal from a fraction, e.g. 0.184 → "+18.4%"
+ * (lt: "+18,4 %"). Used for progress figures, where the sign matters. */
+export function formatSignedPercent(fraction: number, locale: Locale): string {
+  return new Intl.NumberFormat(INTL_LOCALE[locale], {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+    signDisplay: "exceptZero",
+  }).format(fraction);
+}

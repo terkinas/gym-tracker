@@ -3,13 +3,19 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
-import { CITYGYM_DEFAULT_EXERCISES, type Exercise, type ExerciseCategory } from "@/lib/exercises";
+import {
+  CITYGYM_DEFAULT_EXERCISES,
+  type Exercise,
+  type ExerciseCategory,
+  type ExerciseInput,
+} from "@/lib/exercises";
 
 function toExercise(row: {
   id: string;
   userId: string;
   name: string;
   category: string;
+  isOneHanded: boolean;
   createdAt: Date;
 }): Exercise {
   return {
@@ -21,6 +27,7 @@ function toExercise(row: {
     // every write path (createExercise/updateExercise below) is typed to
     // ExerciseCategory.
     category: row.category as ExerciseCategory,
+    isOneHanded: row.isOneHanded,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -35,10 +42,15 @@ export async function getExercisesForUser(userId: string): Promise<Exercise[]> {
 
 export async function createExercise(
   userId: string,
-  data: { name: string; category: ExerciseCategory },
+  data: ExerciseInput,
 ): Promise<Exercise> {
   const row = await db.exercise.create({
-    data: { userId, name: data.name, category: data.category },
+    data: {
+      userId,
+      name: data.name,
+      category: data.category,
+      isOneHanded: data.isOneHanded,
+    },
   });
   return toExercise(row);
 }
@@ -46,7 +58,7 @@ export async function createExercise(
 export async function updateExercise(
   userId: string,
   exerciseId: string,
-  data: { name: string; category: ExerciseCategory },
+  data: ExerciseInput,
 ): Promise<Exercise> {
   // Scope the update to this user's own row in a single statement — never
   // fetch-then-write, so there's no window where a check and the write it
@@ -54,7 +66,11 @@ export async function updateExercise(
   // user's exercise.
   const { count } = await db.exercise.updateMany({
     where: { id: exerciseId, userId },
-    data: { name: data.name, category: data.category },
+    data: {
+      name: data.name,
+      category: data.category,
+      isOneHanded: data.isOneHanded,
+    },
   });
 
   if (count === 0) {
@@ -97,6 +113,7 @@ export async function importCityGymDefaults(userId: string): Promise<Exercise[]>
         userId,
         name: exercise.name,
         category: exercise.category,
+        isOneHanded: exercise.isOneHanded ?? false,
       })),
     });
 

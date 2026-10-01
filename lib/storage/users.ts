@@ -52,6 +52,12 @@ export async function getUserById(id: string): Promise<User | null> {
   return user ? toUser(user) : null;
 }
 
+/** Cheap primary-key existence check (no passwordHash fetched). */
+export async function userExists(id: string): Promise<boolean> {
+  const user = await db.user.findUnique({ where: { id }, select: { id: true } });
+  return user !== null;
+}
+
 export async function createUser(data: {
   name: string;
   username: string;

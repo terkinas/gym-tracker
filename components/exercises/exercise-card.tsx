@@ -28,7 +28,14 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
         <span className="truncate text-sm font-medium text-foreground">
           {exercise.name}
         </span>
-        <Badge>{translateCategory(exercise.category, t)}</Badge>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Badge>{translateCategory(exercise.category, t)}</Badge>
+          {exercise.isOneHanded && (
+            <Badge className="bg-transparent text-muted-foreground">
+              {t.workout.oneHandedBadge}
+            </Badge>
+          )}
+        </div>
       </div>
 
       <DropdownMenu>

@@ -7,8 +7,9 @@ import bcrypt from "bcryptjs";
 import { verifyCredentials } from "@/lib/auth/passport";
 import {
   SESSION_COOKIE_NAME,
-  SESSION_DURATION_SECONDS,
   encryptSession,
+  expiredSessionCookieOptions,
+  sessionCookieOptions,
 } from "@/lib/auth/session";
 import { createUser, getUserByUsername } from "@/lib/storage/users";
 
@@ -35,13 +36,10 @@ async function startSession(userId: string) {
   const token = await encryptSession({ userId });
   const cookieStore = await cookies();
 
-  cookieStore.set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_DURATION_SECONDS,
-  });
+  // Same name + attributes as the logout/clear options, so this always
+  // REPLACES any previous (possibly stale) gymtracker_session instead of
+  // living next to it.
+  cookieStore.set(SESSION_COOKIE_NAME, token, sessionCookieOptions());
 }
 
 export async function registerAction(
@@ -108,11 +106,13 @@ export async function loginAction(
   }
 
   await startSession(result.user.id);
-  redirect("/");
+  redirect("/treniruote");
 }
 
 export async function logoutAction() {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  // Overwrite with an already-expired cookie that has exactly the same
+  // attributes as the login cookie (see lib/auth/session.ts).
+  cookieStore.set(SESSION_COOKIE_NAME, "", expiredSessionCookieOptions());
   redirect("/login");
 }

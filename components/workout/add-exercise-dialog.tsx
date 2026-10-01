@@ -94,19 +94,21 @@ export function AddExerciseDialog({
               />
             </div>
 
-            <div className="flex max-h-80 flex-col gap-1.5 overflow-y-auto">
+            <div className="flex max-h-[min(20rem,50dvh)] min-w-0 flex-col gap-1.5 overflow-y-auto overscroll-contain pr-0.5">
               {filteredExercises.length > 0 ? (
                 filteredExercises.map((exercise) => (
                   <button
                     key={exercise.id}
                     type="button"
                     onClick={() => onSelect(exercise)}
-                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3.5 py-2.5 text-left transition-colors hover:border-foreground/15 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-md border border-border bg-card px-3.5 py-2.5 text-left transition-colors hover:border-foreground/15 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-accent/70"
                   >
-                    <span className="truncate text-sm font-medium text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                       {exercise.name}
                     </span>
-                    <Badge>{translateCategory(exercise.category, t)}</Badge>
+                    <Badge className="max-w-[40%] shrink-0 overflow-hidden text-ellipsis">
+                      {translateCategory(exercise.category, t)}
+                    </Badge>
                   </button>
                 ))
               ) : (

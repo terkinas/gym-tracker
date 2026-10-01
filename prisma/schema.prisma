@@ -59,6 +59,9 @@ model Exercise {
   userId    String
   name      String
   category  String
+  /// When true, the exercise is performed one arm at a time: each logged set
+  /// records which arm it was done with (WorkoutSet.hand).
+  isOneHanded Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -93,6 +96,10 @@ model WorkoutExercise {
   /// Preserves the order exercises were added to the workout (see schema
   /// header note). Set by the storage layer, not user-facing.
   position   Int    @default(0)
+  /// The user tapped "I'm done with this exercise" on /treniruote. Per-row
+  /// state of this specific workout exercise, so it lives here rather than in
+  /// a separate table. Does not affect sets, history, PRs or analytics.
+  completed  Boolean @default(false)
 
   workout Workout      @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   sets    WorkoutSet[]
@@ -107,6 +114,12 @@ model WorkoutSet {
   workoutExerciseId String
   weight            Float
   reps              Int
+  /// Which arm performed this set: "left" | "right". Only meaningful for
+  /// one-handed exercises (Exercise.isOneHanded); NULL for everything else
+  /// and for one-handed sets logged before this column existed (they are
+  /// deliberately NOT back-filled). Stored as text like Exercise.category;
+  /// the allowed values are enforced in lib/actions/workouts.ts.
+  hand              String?
   /// Preserves set order within an exercise (see schema header note).
   position          Int    @default(0)
 

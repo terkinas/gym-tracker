@@ -47,7 +47,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
               });
             }}
             className={cn(
-              "rounded-sm px-2 py-1 text-xs font-semibold tracking-wide uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60",
+              "rounded-sm px-2 py-1 max-md:min-h-9 max-md:min-w-9 text-xs font-semibold tracking-wide uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60",
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground",

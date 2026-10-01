@@ -3,7 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
-import type { Workout, WorkoutExercise } from "@/lib/types/workout";
+import { isSetHand, type SetHand, type Workout, type WorkoutExercise } from "@/lib/types/workout";
 
 // Shape returned by every query below: a Workout row with its exercises and
 // each exercise's sets, both ordered by the `position` column so the array
@@ -27,7 +27,8 @@ type WorkoutRow = {
   updatedAt: Date;
   exercises: {
     exerciseId: string;
-    sets: { id: string; weight: number; reps: number }[];
+    completed: boolean;
+    sets: { id: string; weight: number; reps: number; hand: string | null }[];
   }[];
 };
 
@@ -38,10 +39,12 @@ function toWorkout(row: WorkoutRow): Workout {
     date: row.date,
     exercises: row.exercises.map((exercise) => ({
       exerciseId: exercise.exerciseId,
+      completed: exercise.completed,
       sets: exercise.sets.map((set) => ({
         id: set.id,
         weight: set.weight,
         reps: set.reps,
+        hand: isSetHand(set.hand) ? set.hand : null,
       })),
     })),
     createdAt: row.createdAt.toISOString(),
@@ -111,6 +114,7 @@ export async function createOrUpdateWorkout(
         data: {
           workoutId: workout.id,
           exerciseId: exercise.exerciseId,
+          completed: exercise.completed,
           position: exerciseIndex,
           sets: {
             create: exercise.sets.map((set, setIndex) => ({
@@ -122,6 +126,7 @@ export async function createOrUpdateWorkout(
               id: set.id,
               weight: set.weight,
               reps: set.reps,
+              hand: set.hand,
               position: setIndex,
             })),
           },
@@ -138,6 +143,26 @@ export async function createOrUpdateWorkout(
   return toWorkout(row);
 }
 
+/** Flips the `completed` flag of one exercise in the user's workout for
+ * `date`, without touching sets or any other exercise. Ownership is enforced
+ * in the query itself (the workout must belong to `userId`), so another
+ * user's rows can never match. Returns whether a persisted row was updated —
+ * `false` means the exercise isn't saved in that workout yet (the flag then
+ * travels with the next explicit save). `userId` must come from the
+ * authenticated session. */
+export async function setWorkoutExerciseCompleted(
+  userId: string,
+  date: string,
+  exerciseId: string,
+  completed: boolean,
+): Promise<boolean> {
+  const result = await db.workoutExercise.updateMany({
+    where: { exerciseId, workout: { userId, date } },
+    data: { completed },
+  });
+  return result.count > 0;
+}
+
 /** Deletes a user's workout for a given date, if one exists. Provided for
  * completeness alongside the read/write functions above; no UI in this
  * phase triggers a whole-day delete yet. */
@@ -146,4 +171,114 @@ export async function deleteWorkout(userId: string, date: string): Promise<void>
   // workout is a harmless no-op instead of throwing, matching the previous
   // JSON implementation's filter-based delete.
   await db.workout.deleteMany({ where: { userId, date } });
+}
+
+/** A page of a user's saved workouts, newest first, for the history list.
+ * Fetches `limit + 1` rows so the caller can tell whether more exist
+ * without a separate count query. `userId` must come from the
+ * authenticated session, never from client input. */
+export async function getWorkoutHistoryForUser(
+  userId: string,
+  limit: number,
+): Promise<{ workouts: Workout[]; hasMore: boolean }> {
+  const rows = await db.workout.findMany({
+    where: { userId },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    take: limit + 1,
+    include: WORKOUT_INCLUDE,
+  });
+  const hasMore = rows.length > limit;
+  return { workouts: rows.slice(0, limit).map(toWorkout), hasMore };
+}
+
+/** One workout by id, scoped to its owner. Querying by BOTH id and userId
+ * means another user's workout id resolves to `null` (→ notFound()) rather
+ * than leaking its contents. */
+export async function getWorkoutByIdForUser(
+  userId: string,
+  workoutId: string,
+): Promise<Workout | null> {
+  const row = await db.workout.findFirst({
+    where: { id: workoutId, userId },
+    include: WORKOUT_INCLUDE,
+  });
+  return row ? toWorkout(row) : null;
+}
+
+/** What a user did the last time they performed an exercise, strictly
+ * before `beforeDate` (today's workout — saved or not — is never "last
+ * time"). Sets are exactly as stored: one-handed exercises keep their single
+ * combined weight/reps, so there's nothing special to do for them. */
+export type LastExerciseSession = {
+  date: string;
+  sets: { weight: number; reps: number; hand: SetHand | null }[];
+};
+
+/** Resolves "last time" for many exercises with a fixed number of queries
+ * (two), regardless of how many exercises are requested — no per-exercise
+ * N+1. Returns a map keyed by `exerciseId`; exercises with no earlier
+ * workout containing sets are simply absent.
+ *
+ * `userId` must come from the authenticated session, never from the
+ * client. */
+export async function getLastWorkoutDataForExercises(
+  userId: string,
+  exerciseIds: string[],
+  beforeDate: string,
+): Promise<Record<string, LastExerciseSession>> {
+  if (exerciseIds.length === 0) return {};
+
+  // 1) Lightweight: which workout-exercise row is the most recent one per
+  //    exercise (no set rows loaded yet). `date` is YYYY-MM-DD text, so
+  //    `lt` / ordering match chronological order.
+  const candidates = await db.workoutExercise.findMany({
+    where: {
+      exerciseId: { in: exerciseIds },
+      sets: { some: {} },
+      workout: { userId, date: { lt: beforeDate } },
+    },
+    orderBy: { workout: { date: "desc" } },
+    select: { id: true, exerciseId: true, workout: { select: { date: true } } },
+  });
+
+  const latestByExercise = new Map<string, { id: string; date: string }>();
+  for (const row of candidates) {
+    if (!latestByExercise.has(row.exerciseId)) {
+      latestByExercise.set(row.exerciseId, { id: row.id, date: row.workout.date });
+    }
+  }
+  if (latestByExercise.size === 0) return {};
+
+  // 2) Load the sets for just those rows.
+  const rows = await db.workoutExercise.findMany({
+    where: { id: { in: [...latestByExercise.values()].map((v) => v.id) } },
+    select: {
+      id: true,
+      sets: {
+        orderBy: { position: "asc" },
+        select: { weight: true, reps: true, hand: true },
+      },
+    },
+  });
+  const setsById = new Map<string, LastExerciseSession["sets"]>(
+    rows.map(
+      (r: {
+        id: string;
+        sets: { weight: number; reps: number; hand: string | null }[];
+      }) => [
+        r.id,
+        r.sets.map((set) => ({
+          weight: set.weight,
+          reps: set.reps,
+          hand: isSetHand(set.hand) ? set.hand : null,
+        })),
+      ],
+    ),
+  );
+
+  const result: Record<string, LastExerciseSession> = {};
+  for (const [exerciseId, { id, date }] of latestByExercise) {
+    result[exerciseId] = { date, sets: setsById.get(id) ?? [] };
+  }
+  return result;
 }

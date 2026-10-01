@@ -4,7 +4,7 @@ import { WorkoutPage } from "@/components/workout/workout-page";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { getTodayDateString } from "@/lib/date";
 import { getExercisesForUser } from "@/lib/storage/exercises";
-import { getWorkoutByDate } from "@/lib/storage/workouts";
+import { getLastWorkoutDataForExercises, getWorkoutByDate } from "@/lib/storage/workouts";
 import { getTranslations } from "@/lib/i18n/get-translations";
 import { formatDate } from "@/lib/i18n/format";
 
@@ -24,11 +24,23 @@ export default async function TreniruotePage() {
       ])
     : [[], null];
 
+  // "Last time" is informational only: one batched, user-scoped lookup of the
+  // most recent EARLIER workout per exercise (strictly before today, so the
+  // workout being edited is never its own "last time").
+  const lastTimeByExerciseId = user
+    ? await getLastWorkoutDataForExercises(
+        user.id,
+        exercises.map((exercise) => exercise.id),
+        today,
+      )
+    : {};
+
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-5 py-10 lg:px-8 lg:py-14">
       <WorkoutPage
         initialWorkout={workout}
         userExercises={exercises}
+        lastTimeByExerciseId={lastTimeByExerciseId}
         todayDisplayDate={formatDate(today, locale)}
       />
     </div>

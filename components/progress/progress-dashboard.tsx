@@ -6,6 +6,8 @@ import { TrendingUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Achievements } from "@/components/progress/achievements";
+import { OverallProgress } from "@/components/progress/overall-progress";
 import { ProgressSummary } from "@/components/progress/progress-summary";
 import { TimeRangeSelect } from "@/components/progress/time-range-select";
 import { TrainingActivityChart } from "@/components/progress/training-activity-chart";
@@ -19,7 +21,7 @@ import {
   getTrainingActivity,
   getVolumeProgression,
 } from "@/lib/progress/analytics";
-import type { TimeRange } from "@/lib/progress/analytics";
+import type { ProgressOverview, TimeRange } from "@/lib/progress/analytics";
 import type { Exercise } from "@/lib/exercises";
 import type { Workout } from "@/lib/types/workout";
 import { useTranslations } from "@/lib/i18n/locale-context";
@@ -28,6 +30,9 @@ import type { Dictionary } from "@/lib/i18n/translations";
 interface ProgressDashboardProps {
   workouts: Workout[];
   exercises: Exercise[];
+  /** Score, streaks and achievements, computed server-side with the same
+   * functions the leaderboard uses. */
+  overview: ProgressOverview;
 }
 
 /** Default exercise for the exercise-progress picker: whichever the user
@@ -50,7 +55,7 @@ function pickDefaultExerciseId(workouts: Workout[], exercises: Exercise[]): stri
   return bestId;
 }
 
-export function ProgressDashboard({ workouts, exercises }: ProgressDashboardProps) {
+export function ProgressDashboard({ workouts, exercises, overview }: ProgressDashboardProps) {
   const t = useTranslations();
   const [range, setRange] = React.useState<TimeRange>("30");
   const [selectedExerciseId, setSelectedExerciseId] = React.useState<string | null>(() =>
@@ -79,6 +84,8 @@ export function ProgressDashboard({ workouts, exercises }: ProgressDashboardProp
         <EmptyState t={t} />
       ) : (
         <>
+          <OverallProgress overview={overview} />
+
           <ProgressSummary summary={summary} />
 
           <div className="flex flex-col gap-4">
@@ -129,6 +136,8 @@ export function ProgressDashboard({ workouts, exercises }: ProgressDashboardProp
               onSelectExercise={setSelectedExerciseId}
             />
           )}
+
+          <Achievements achievements={overview.achievements} />
         </>
       )}
     </div>

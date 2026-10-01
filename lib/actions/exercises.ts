@@ -9,42 +9,66 @@ import {
   importCityGymDefaults,
   updateExercise,
 } from "@/lib/storage/exercises";
-import type { Exercise, ExerciseCategory } from "@/lib/exercises";
+import {
+  EXERCISE_CATEGORIES,
+  type Exercise,
+  type ExerciseCategory,
+  type ExerciseInput,
+} from "@/lib/exercises";
 
 // The user id always comes from the authenticated session (via requireUser),
 // never from the client — a request can only ever act on its own exercises.
 
-export async function createExerciseAction(values: {
+// Validates untrusted client input server-side. `isOneHanded` must be a real
+// boolean (not a truthy string/number) and the category must be one of the
+// known values — never trust the TypeScript types alone across the wire.
+function validateExerciseInput(values: {
   name: string;
   category: ExerciseCategory;
-}): Promise<Exercise> {
-  const user = await requireUser();
-  const name = values.name.trim();
+  isOneHanded?: boolean;
+}): ExerciseInput {
+  const name = typeof values?.name === "string" ? values.name.trim() : "";
 
   if (!name) {
     throw new Error("INVALID_NAME");
   }
 
-  const exercise = await createExercise(user.id, { name, category: values.category });
+  if (!EXERCISE_CATEGORIES.includes(values.category)) {
+    throw new Error("INVALID_CATEGORY");
+  }
+
+  if (values.isOneHanded !== undefined && typeof values.isOneHanded !== "boolean") {
+    throw new Error("INVALID_ONE_HANDED");
+  }
+
+  return {
+    name,
+    category: values.category,
+    isOneHanded: values.isOneHanded ?? false,
+  };
+}
+
+export async function createExerciseAction(values: {
+  name: string;
+  category: ExerciseCategory;
+  isOneHanded?: boolean;
+}): Promise<Exercise> {
+  const user = await requireUser();
+  const input = validateExerciseInput(values);
+
+  const exercise = await createExercise(user.id, input);
   revalidatePath("/pratimai");
   return exercise;
 }
 
 export async function updateExerciseAction(
   exerciseId: string,
-  values: { name: string; category: ExerciseCategory },
+  values: { name: string; category: ExerciseCategory; isOneHanded?: boolean },
 ): Promise<Exercise> {
   const user = await requireUser();
-  const name = values.name.trim();
+  const input = validateExerciseInput(values);
 
-  if (!name) {
-    throw new Error("INVALID_NAME");
-  }
-
-  const exercise = await updateExercise(user.id, exerciseId, {
-    name,
-    category: values.category,
-  });
+  const exercise = await updateExercise(user.id, exerciseId, input);
   revalidatePath("/pratimai");
   return exercise;
 }

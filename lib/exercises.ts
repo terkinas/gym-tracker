@@ -15,7 +15,17 @@ export type Exercise = {
   userId: string;
   name: string;
   category: ExerciseCategory;
+  /** Performed one arm at a time, but weight/reps are logged once per set
+   * for both arms combined. */
+  isOneHanded: boolean;
   createdAt: string;
+};
+
+/** Fields a user can set when creating/editing an exercise. */
+export type ExerciseInput = {
+  name: string;
+  category: ExerciseCategory;
+  isOneHanded: boolean;
 };
 
 // The predefined "CityGym" exercise set offered to a user with zero
@@ -26,6 +36,7 @@ export type Exercise = {
 export const CITYGYM_DEFAULT_EXERCISES: readonly {
   name: string;
   category: ExerciseCategory;
+  isOneHanded?: boolean;
 }[] = [
   // Krūtinė / Chest
   { name: "Incline Bench Press", category: "Krūtinė" },
@@ -34,10 +45,10 @@ export const CITYGYM_DEFAULT_EXERCISES: readonly {
   // Pečiai / Shoulders
   { name: "Lateral Raise Machine", category: "Pečiai" },
   { name: "Machine Shoulder Press", category: "Pečiai" },
-  { name: "Single-Arm Lateral Raise", category: "Pečiai" },
+  { name: "Single-Arm Lateral Raise", category: "Pečiai", isOneHanded: true },
   // Bicepsas / Biceps
   { name: "Biceps Curl Machine", category: "Bicepsas" },
-  { name: "Dumbbell Supinating Curl", category: "Bicepsas" },
+  { name: "Dumbbell Supinating Curl", category: "Bicepsas", isOneHanded: true },
   { name: "Cable Barbell Curl", category: "Bicepsas" },
   // Tricepsas / Triceps
   { name: "Overhead Cable Triceps Extension", category: "Tricepsas" },

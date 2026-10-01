@@ -1,49 +1,97 @@
 "use client";
 
-import { MoreVertical, Plus, Trash2 } from "lucide-react";
+import { Check, Circle, MoreVertical, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { WorkoutSetRow } from "@/components/workout/workout-set-row";
+import { WorkoutSetRow, setGridClass } from "@/components/workout/workout-set-row";
 import type { ClientExercise } from "@/components/workout/types";
-import { useTranslations } from "@/lib/i18n/locale-context";
+import { formatCount } from "@/lib/i18n/format";
+import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
+import type { LastExerciseSession } from "@/lib/storage/workouts";
+import type { SetHand } from "@/lib/types/workout";
 
 interface WorkoutExerciseCardProps {
   exercise: ClientExercise;
+  /** Informational only — never pre-fills or alters the current sets. */
+  lastTime: LastExerciseSession | null;
+  /** The exercise currently being worked on (UI-only; shows the NOW badge). */
+  isActive: boolean;
   /** The id of the most recently added set (across all exercises), so its
    * weight input can grab focus once, right when its row first mounts. */
   justAddedSetId: string | null;
   onChangeSetWeight: (setId: string, value: string) => void;
   onChangeSetReps: (setId: string, value: string) => void;
+  onChangeSetHand: (setId: string, value: SetHand) => void;
   onDeleteSet: (setId: string) => void;
   onAddSet: () => void;
   onRequestRemove: () => void;
+  onDone: () => void;
 }
 
 export function WorkoutExerciseCard({
   exercise,
+  lastTime,
+  isActive,
   justAddedSetId,
   onChangeSetWeight,
   onChangeSetReps,
+  onChangeSetHand,
   onDeleteSet,
   onAddSet,
   onRequestRemove,
+  onDone,
 }: WorkoutExerciseCardProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const hasSets = exercise.sets.length > 0;
 
   return (
-    <Card className="gap-4 p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="min-w-0 truncate text-base font-semibold text-foreground">
-          {exercise.exerciseName}
-        </h3>
+    <Card className={cn("gap-4 p-5 sm:p-6", isActive && "border-primary/40")}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="min-w-0 truncate text-base font-semibold text-foreground">
+              {exercise.exerciseName}
+            </h3>
+            {isActive && (
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.65rem] leading-none font-semibold tracking-wider text-primary uppercase">
+                <Circle
+                  className="h-2 w-2 animate-pulse fill-current motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+                {t.workout.nowBadge}
+              </span>
+            )}
+          </div>
+          {lastTime && lastTime.sets.length > 0 && (
+            <p className="min-w-0 text-xs break-words text-muted-foreground">
+              <span className="font-medium">{t.workout.lastTime}:</span>{" "}
+              {lastTime.sets
+                .map(
+                  (set) =>
+                    `${formatCount(set.weight, locale)} ${t.records.units.kg} × ${formatCount(set.reps, locale)}${
+                      exercise.isOneHanded && set.hand
+                        ? ` — ${t.workout.hand[set.hand]}`
+                        : ""
+                    }`,
+                )
+                .join(", ")}
+            </p>
+          )}
+          {exercise.isOneHanded && (
+            <p className="text-xs text-muted-foreground">
+              {t.workout.oneHandedHint}
+            </p>
+          )}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -66,7 +114,7 @@ export function WorkoutExerciseCard({
 
       <div className="flex flex-col gap-2.5">
         {hasSets && (
-          <div className="grid grid-cols-[1.75rem_1fr_1fr_2rem] gap-2.5 sm:grid-cols-[2rem_5rem_5rem_2rem] sm:gap-3">
+          <div className={`grid ${setGridClass(exercise.isOneHanded)}`}>
             <span className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               {t.workout.setsHeader.number}
             </span>
@@ -76,6 +124,11 @@ export function WorkoutExerciseCard({
             <span className="text-center text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               {t.workout.setsHeader.reps}
             </span>
+            {exercise.isOneHanded && (
+              <span className="text-center text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                {t.workout.hand.label}
+              </span>
+            )}
             <span />
           </div>
         )}
@@ -86,9 +139,11 @@ export function WorkoutExerciseCard({
               key={set.id}
               set={set}
               setNumber={index + 1}
+              isOneHanded={exercise.isOneHanded}
               autoFocus={set.id === justAddedSetId}
               onChangeWeight={(value) => onChangeSetWeight(set.id, value)}
               onChangeReps={(value) => onChangeSetReps(set.id, value)}
+              onChangeHand={(value) => onChangeSetHand(set.id, value)}
               onDelete={() => onDeleteSet(set.id)}
             />
           ))
@@ -99,16 +154,26 @@ export function WorkoutExerciseCard({
         )}
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onAddSet}
-        className="self-start"
-      >
-        <Plus className="h-4 w-4" strokeWidth={2} />
-        {t.workout.addSet}
-      </Button>
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onAddSet}
+          className="h-[2.625rem] w-full text-sm sm:w-auto"
+        >
+          <Plus className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
+          {t.workout.addSet}
+        </Button>
+
+        <Button
+          type="button"
+          onClick={onDone}
+          className="h-[2.625rem] w-full text-sm sm:w-auto"
+        >
+          <Check className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
+          {t.workout.doneWithExercise}
+        </Button>
+      </div>
     </Card>
   );
 }
