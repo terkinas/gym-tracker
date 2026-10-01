@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { ExerciseList } from "@/components/exercises/exercise-list";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -12,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PratimaiPage() {
   const user = await getCurrentUser();
+  if (!user) redirect("/login");
   const exercises = user ? await getExercisesForUser(user.id) : [];
 
   return (

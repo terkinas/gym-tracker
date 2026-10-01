@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { WorkoutPage } from "@/components/workout/workout-page";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -15,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function TreniruotePage() {
   const [user, { locale }] = await Promise.all([getCurrentUser(), getTranslations()]);
+  if (!user) redirect("/login");
   const today = getTodayDateString();
 
   const [exercises, workout] = user
