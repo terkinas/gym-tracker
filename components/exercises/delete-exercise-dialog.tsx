@@ -16,12 +16,14 @@ interface DeleteExerciseDialogProps {
   exercise: Exercise | null;
   onOpenChange: (open: boolean) => void;
   onConfirm: (exercise: Exercise) => void;
+  isDeleting?: boolean;
 }
 
 export function DeleteExerciseDialog({
   exercise,
   onOpenChange,
   onConfirm,
+  isDeleting = false,
 }: DeleteExerciseDialogProps) {
   const t = useTranslations();
 
@@ -36,10 +38,11 @@ export function DeleteExerciseDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" disabled={isDeleting} onClick={() => onOpenChange(false)}>
             {t.common.cancel}
           </Button>
           <Button
+            loading={isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={() => {
               if (exercise) onConfirm(exercise);

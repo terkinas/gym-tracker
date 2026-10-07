@@ -3,13 +3,14 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { categoryColorClass } from "@/lib/category-colors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { getWorkoutStats } from "@/lib/history/stats";
 import { translateCategory } from "@/lib/i18n/categories";
-import { formatCount, formatDate, formatVolume, pluralizeThree } from "@/lib/i18n/format";
+import { formatCount, formatDate, pluralizeThree } from "@/lib/i18n/format";
 import { getTranslations } from "@/lib/i18n/get-translations";
 import { getExercisesForUser } from "@/lib/storage/exercises";
 import { getWorkoutByIdForUser } from "@/lib/storage/workouts";
@@ -31,17 +32,20 @@ export default async function WorkoutDetailPage({
 
   // Scoped by BOTH id and the session's userId: someone else's workout id
   // resolves to null and 404s instead of leaking data.
-  const workout = await getWorkoutByIdForUser(user.id, id);
+  // Both lookups are independent, so run them in parallel (one DB round trip
+  // instead of two).
+  const [workout, exercises] = await Promise.all([
+    getWorkoutByIdForUser(user.id, id),
+    getExercisesForUser(user.id),
+  ]);
   if (!workout) notFound();
-
-  const exercises = await getExercisesForUser(user.id);
   const exerciseById = new Map(exercises.map((e) => [e.id, e]));
   const stats = getWorkoutStats(workout);
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-5 py-10 lg:px-8 lg:py-14">
       <Button asChild variant="ghost" size="sm" className="-ml-3 mb-4">
-        <Link href="/istorija">
+        <Link href={`/istorija?month=${workout.date.slice(0, 7)}`}>
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           {t.history.backToHistory}
         </Link>
@@ -58,7 +62,7 @@ export default async function WorkoutDetailPage({
           {pluralizeThree(locale, stats.setCount, t.history.setsWord)}
         </p>
         <p className="text-sm font-medium text-foreground">
-          {formatVolume(stats.totalVolume, locale)} {t.history.totalVolume}
+          {formatCount(stats.hardSetCount, locale)} {t.history.hardSets}
         </p>
       </div>
 
@@ -73,7 +77,9 @@ export default async function WorkoutDetailPage({
                 </h2>
                 {exercise && (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge>{translateCategory(exercise.category, t)}</Badge>
+                    <Badge className={categoryColorClass(exercise.category)}>
+                      {translateCategory(exercise.category, t)}
+                    </Badge>
                     {exercise.isOneHanded && (
                       <Badge className="bg-transparent text-muted-foreground">
                         {t.workout.oneHandedBadge}
@@ -90,16 +96,17 @@ export default async function WorkoutDetailPage({
                 <p className="text-sm text-muted-foreground">{t.workout.noSetsYet}</p>
               ) : (
                 <div className="flex flex-col">
-                  <div className={`grid ${exercise?.isOneHanded ? "grid-cols-[3rem_1fr_1fr_1fr]" : "grid-cols-[3rem_1fr_1fr]"} gap-3 border-b border-border pb-2 text-xs font-medium text-muted-foreground uppercase`}>
+                  <div className={`grid ${exercise?.isOneHanded ? "grid-cols-[3rem_1fr_1fr_1fr_3rem]" : "grid-cols-[3rem_1fr_1fr_3rem]"} gap-3 border-b border-border pb-2 text-xs font-medium text-muted-foreground uppercase`}>
                     <span>{t.history.columns.set}</span>
                     <span>{t.history.columns.weight}</span>
                     <span>{t.history.columns.reps}</span>
                     {exercise?.isOneHanded && <span>{t.workout.hand.label}</span>}
+                    <span>{t.history.columns.hard}</span>
                   </div>
                   {entry.sets.map((set, setIndex) => (
                     <div
                       key={set.id}
-                      className={`grid ${exercise?.isOneHanded ? "grid-cols-[3rem_1fr_1fr_1fr]" : "grid-cols-[3rem_1fr_1fr]"} gap-3 border-b border-border/50 py-2 text-sm text-foreground tabular-nums last:border-b-0`}
+                      className={`grid ${exercise?.isOneHanded ? "grid-cols-[3rem_1fr_1fr_1fr_3rem]" : "grid-cols-[3rem_1fr_1fr_3rem]"} gap-3 border-b border-border/50 py-2 text-sm text-foreground tabular-nums last:border-b-0`}
                     >
                       <span className="text-muted-foreground">{setIndex + 1}</span>
                       <span>{formatCount(set.weight, locale)} kg</span>
@@ -107,6 +114,7 @@ export default async function WorkoutDetailPage({
                       {exercise?.isOneHanded && (
                         <span>{set.hand ? t.workout.hand[set.hand] : "—"}</span>
                       )}
+                      <span>{set.isHardSet ? "✓" : "—"}</span>
                     </div>
                   ))}
                 </div>

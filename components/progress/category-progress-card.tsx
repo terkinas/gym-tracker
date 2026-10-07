@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import type { CategoryProgress } from "@/lib/progress/analytics";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
 import { translateCategory } from "@/lib/i18n/categories";
-import { formatCount, formatVolume, pluralize } from "@/lib/i18n/format";
+import { formatCount, pluralize } from "@/lib/i18n/format";
 
 interface CategoryProgressCardProps {
   data: CategoryProgress;
@@ -16,7 +16,7 @@ export function CategoryProgressCard({ data }: CategoryProgressCardProps) {
   const t = useTranslations();
   const locale = useLocale();
   const hasWorkouts = data.workoutCount > 0;
-  const hasChart = data.volumeSeries.length >= 2;
+  const hasChart = data.hardSetSeries.length >= 2;
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
@@ -41,14 +41,14 @@ export function CategoryProgressCard({ data }: CategoryProgressCardProps) {
               {pluralize(locale, data.totalSets, t.progress.words.set)}
             </span>
             <span className="font-medium text-foreground">
-              {formatVolume(data.totalVolume, locale)}
+              {formatCount(data.hardSets, locale)} {t.progress.summary.hardSets.toLowerCase()}
             </span>
           </div>
 
           {hasChart ? (
             <div className="h-16 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data.volumeSeries} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+                <LineChart data={data.hardSetSeries} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
                   <Line
                     type="monotone"
                     dataKey="value"

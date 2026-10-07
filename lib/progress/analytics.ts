@@ -22,7 +22,8 @@ export type DailyPoint = { date: string; value: number };
 export type ProgressSummary = {
   totalWorkouts: number;
   totalSets: number;
-  totalVolume: number;
+  /** Sets flagged as "hard sets" (the app's volume measure). */
+  totalHardSets: number;
   totalExercises: number;
   lastWorkoutDate: string | null;
   workoutsThisWeek: number;
@@ -33,8 +34,9 @@ export type CategoryProgress = {
   exerciseCount: number;
   workoutCount: number;
   totalSets: number;
-  totalVolume: number;
-  volumeSeries: DailyPoint[];
+  /** Direct hard sets (exercises whose primary muscle is this category). */
+  hardSets: number;
+  hardSetSeries: DailyPoint[];
 };
 
 export type ExerciseProgress = {
@@ -43,7 +45,7 @@ export type ExerciseProgress = {
   bestWeight: number | null;
   bestReps: number | null;
   bestSetVolume: number | null;
-  totalVolume: number;
+  hardSets: number;
   maxWeightSeries: DailyPoint[];
 };
 
@@ -51,11 +53,11 @@ export function setVolume(weight: number, reps: number): number {
   return weight * reps;
 }
 
-export function workoutTotalVolume(workout: Workout): number {
+export function workoutHardSetCount(workout: Workout): number {
   let total = 0;
   for (const exercise of workout.exercises) {
     for (const set of exercise.sets) {
-      total += setVolume(set.weight, set.reps);
+      if (set.isHardSet) total += 1;
     }
   }
   return total;
@@ -80,7 +82,7 @@ export function addDaysToDateString(dateString: string, days: number): string {
 }
 
 /** Monday of the week containing `dateString`, as `YYYY-MM-DD`. */
-function startOfWeek(dateString: string): string {
+export function startOfWeek(dateString: string): string {
   const date = new Date(`${dateString}T00:00:00Z`);
   const day = date.getUTCDay();
   const diff = day === 0 ? 6 : day - 1;
@@ -111,7 +113,7 @@ export function getProgressSummary(
 ): ProgressSummary {
   const sorted = sortByDateAsc(workouts);
   const totalSets = workouts.reduce((sum, workout) => sum + workoutSetCount(workout), 0);
-  const totalVolume = workouts.reduce((sum, workout) => sum + workoutTotalVolume(workout), 0);
+  const totalHardSets = workouts.reduce((sum, workout) => sum + workoutHardSetCount(workout), 0);
   const lastWorkoutDate = sorted.length > 0 ? sorted[sorted.length - 1].date : null;
   const weekStart = startOfWeek(getTodayDateString());
   const workoutsThisWeek = workouts.filter((workout) => workout.date >= weekStart).length;
@@ -119,7 +121,7 @@ export function getProgressSummary(
   return {
     totalWorkouts: workouts.length,
     totalSets,
-    totalVolume,
+    totalHardSets,
     totalExercises: exercises.length,
     lastWorkoutDate,
     workoutsThisWeek,
@@ -135,14 +137,6 @@ export function getTrainingActivity(workouts: Workout[], range: TimeRange): Dail
   return sortByDateAsc(filtered).map((workout) => ({
     date: workout.date,
     value: workoutSetCount(workout),
-  }));
-}
-
-export function getVolumeProgression(workouts: Workout[], range: TimeRange): DailyPoint[] {
-  const filtered = filterWorkoutsByRange(workouts, range);
-  return sortByDateAsc(filtered).map((workout) => ({
-    date: workout.date,
-    value: workoutTotalVolume(workout),
   }));
 }
 
@@ -165,11 +159,11 @@ export function getCategoryProgress(
 
     let workoutCount = 0;
     let totalSets = 0;
-    let totalVolume = 0;
-    const volumeSeries: DailyPoint[] = [];
+    let hardSets = 0;
+    const hardSetSeries: DailyPoint[] = [];
 
     for (const workout of filtered) {
-      let dayVolume = 0;
+      let dayHardSets = 0;
       let matchedThisWorkout = false;
 
       for (const exercise of workout.exercises) {
@@ -178,15 +172,16 @@ export function getCategoryProgress(
 
         for (const set of exercise.sets) {
           totalSets += 1;
-          const volume = setVolume(set.weight, set.reps);
-          totalVolume += volume;
-          dayVolume += volume;
+          if (set.isHardSet) {
+            hardSets += 1;
+            dayHardSets += 1;
+          }
         }
       }
 
       if (matchedThisWorkout) {
         workoutCount += 1;
-        volumeSeries.push({ date: workout.date, value: dayVolume });
+        hardSetSeries.push({ date: workout.date, value: dayHardSets });
       }
     }
 
@@ -195,8 +190,8 @@ export function getCategoryProgress(
       exerciseCount: categoryExerciseIds.size,
       workoutCount,
       totalSets,
-      totalVolume,
-      volumeSeries,
+      hardSets,
+      hardSetSeries,
     };
   });
 }
@@ -211,7 +206,7 @@ export function getExerciseProgress(workouts: Workout[], exerciseId: string): Ex
   let bestWeight: number | null = null;
   let bestReps: number | null = null;
   let bestSetVolume: number | null = null;
-  let totalVolume = 0;
+  let hardSets = 0;
   const maxWeightSeries: DailyPoint[] = [];
 
   for (const workout of sorted) {
@@ -223,7 +218,7 @@ export function getExerciseProgress(workouts: Workout[], exerciseId: string): Ex
 
     for (const set of match.sets) {
       const volume = setVolume(set.weight, set.reps);
-      totalVolume += volume;
+      if (set.isHardSet) hardSets += 1;
       if (bestWeight === null || set.weight > bestWeight) bestWeight = set.weight;
       if (bestReps === null || set.reps > bestReps) bestReps = set.reps;
       if (bestSetVolume === null || volume > bestSetVolume) bestSetVolume = volume;
@@ -239,7 +234,7 @@ export function getExerciseProgress(workouts: Workout[], exerciseId: string): Ex
     bestWeight,
     bestReps,
     bestSetVolume,
-    totalVolume,
+    hardSets,
     maxWeightSeries,
   };
 }

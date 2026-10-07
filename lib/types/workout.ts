@@ -15,6 +15,8 @@ export type WorkoutSet = {
   reps: number;
   /** null for non-one-handed exercises and for legacy one-handed sets. */
   hand: SetHand | null;
+  /** Counts as a "hard set" (taken close to failure) for weekly volume. */
+  isHardSet: boolean;
 };
 
 export type WorkoutExercise = {

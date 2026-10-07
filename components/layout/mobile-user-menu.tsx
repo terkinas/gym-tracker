@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CircleUser, LogOut, Medal, Trophy } from "lucide-react";
+import { CircleUser, Loader2, LogOut, Medal, Trophy } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -25,12 +25,10 @@ interface MobileUserMenuProps {
  * submitting the server action); the dropdown item just submits that form. */
 export function MobileUserMenu({ name, username }: MobileUserMenuProps) {
   const t = useTranslations();
-  const formRef = React.useRef<HTMLFormElement>(null);
+  const [loggingOut, startLogout] = React.useTransition();
 
   return (
     <>
-      <form ref={formRef} action={logoutAction} className="hidden" />
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -64,9 +62,19 @@ export function MobileUserMenu({ name, username }: MobileUserMenuProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             className="min-h-11"
-            onSelect={() => formRef.current?.requestSubmit()}
+            disabled={loggingOut}
+            onSelect={(event) => {
+              // Keep the menu open so the spinner stays visible until the
+              // redirect to /login happens.
+              event.preventDefault();
+              startLogout(() => logoutAction());
+            }}
           >
-            <LogOut className="h-4 w-4" strokeWidth={1.75} />
+            {loggingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} aria-hidden="true" />
+            ) : (
+              <LogOut className="h-4 w-4" strokeWidth={1.75} />
+            )}
             {t.nav.logOut}
           </DropdownMenuItem>
         </DropdownMenuContent>

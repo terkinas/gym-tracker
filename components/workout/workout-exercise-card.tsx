@@ -30,10 +30,15 @@ interface WorkoutExerciseCardProps {
   onChangeSetWeight: (setId: string, value: string) => void;
   onChangeSetReps: (setId: string, value: string) => void;
   onChangeSetHand: (setId: string, value: SetHand) => void;
+  onChangeSetHardSet: (setId: string, value: boolean) => void;
   onDeleteSet: (setId: string) => void;
   onAddSet: () => void;
   onRequestRemove: () => void;
   onDone: () => void;
+  /** This exercise's "Done" save is in flight (spinner on its button). */
+  isSavingDone?: boolean;
+  /** Any workout save is in flight; blocks a second one. */
+  disabled?: boolean;
 }
 
 export function WorkoutExerciseCard({
@@ -44,10 +49,13 @@ export function WorkoutExerciseCard({
   onChangeSetWeight,
   onChangeSetReps,
   onChangeSetHand,
+  onChangeSetHardSet,
   onDeleteSet,
   onAddSet,
   onRequestRemove,
   onDone,
+  isSavingDone = false,
+  disabled = false,
 }: WorkoutExerciseCardProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -129,6 +137,9 @@ export function WorkoutExerciseCard({
                 {t.workout.hand.label}
               </span>
             )}
+            <span className="text-center text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              {t.workout.setsHeader.hard}
+            </span>
             <span />
           </div>
         )}
@@ -144,6 +155,7 @@ export function WorkoutExerciseCard({
               onChangeWeight={(value) => onChangeSetWeight(set.id, value)}
               onChangeReps={(value) => onChangeSetReps(set.id, value)}
               onChangeHand={(value) => onChangeSetHand(set.id, value)}
+              onChangeHardSet={(value) => onChangeSetHardSet(set.id, value)}
               onDelete={() => onDeleteSet(set.id)}
             />
           ))
@@ -168,9 +180,11 @@ export function WorkoutExerciseCard({
         <Button
           type="button"
           onClick={onDone}
+          loading={isSavingDone}
+          disabled={disabled}
           className="h-[2.625rem] w-full text-sm sm:w-auto"
         >
-          <Check className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
+          {!isSavingDone && <Check className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />}
           {t.workout.doneWithExercise}
         </Button>
       </div>

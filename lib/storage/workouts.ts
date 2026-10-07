@@ -28,7 +28,13 @@ type WorkoutRow = {
   exercises: {
     exerciseId: string;
     completed: boolean;
-    sets: { id: string; weight: number; reps: number; hand: string | null }[];
+    sets: {
+      id: string;
+      weight: number;
+      reps: number;
+      hand: string | null;
+      isHardSet: boolean;
+    }[];
   }[];
 };
 
@@ -45,6 +51,7 @@ function toWorkout(row: WorkoutRow): Workout {
         weight: set.weight,
         reps: set.reps,
         hand: isSetHand(set.hand) ? set.hand : null,
+        isHardSet: set.isHardSet,
       })),
     })),
     createdAt: row.createdAt.toISOString(),
@@ -127,6 +134,7 @@ export async function createOrUpdateWorkout(
               weight: set.weight,
               reps: set.reps,
               hand: set.hand,
+              isHardSet: set.isHardSet,
               position: setIndex,
             })),
           },
@@ -281,4 +289,17 @@ export async function getLastWorkoutDataForExercises(
     result[exerciseId] = { date, sets: setsById.get(id) ?? [] };
   }
   return result;
+}
+
+/** Ids + dates of a user's workouts within one month (`YYYY-MM`), for the
+ * history calendar. `userId` must come from the authenticated session. */
+export async function getWorkoutDaysForMonth(
+  userId: string,
+  month: string,
+): Promise<{ id: string; date: string }[]> {
+  return db.workout.findMany({
+    where: { userId, date: { startsWith: `${month}-` } },
+    orderBy: { date: "asc" },
+    select: { id: true, date: true },
+  });
 }

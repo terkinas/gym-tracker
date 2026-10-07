@@ -1,27 +1,23 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { History } from "lucide-react";
 
-import { HistoryCard } from "@/components/history/history-card";
-import { Button } from "@/components/ui/button";
+import { HistoryCalendar } from "@/components/history/history-calendar";
 import { getCurrentUser } from "@/lib/auth/dal";
+import { getTodayDateString } from "@/lib/date";
 import { getTranslations } from "@/lib/i18n/get-translations";
-import { getExercisesForUser } from "@/lib/storage/exercises";
-import { getWorkoutHistoryForUser } from "@/lib/storage/workouts";
-
-const PAGE_SIZE = 20;
-const MAX_LIMIT = 500;
+import { getWorkoutDaysForMonth } from "@/lib/storage/workouts";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getTranslations();
   return { title: `${t.history.pageTitle} · GymTracker` };
 }
 
-function parseLimit(value: string | string[] | undefined): number {
-  const n = Number(Array.isArray(value) ? value[0] : value);
-  if (!Number.isInteger(n) || n < PAGE_SIZE) return PAGE_SIZE;
-  return Math.min(n, MAX_LIMIT);
+/** `?month=YYYY-MM`; anything invalid or in the future falls back to the
+ * current month. */
+function parseMonth(value: string | string[] | undefined, currentMonth: string): string {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw || !/^\d{4}-(0[1-9]|1[0-2])$/.test(raw)) return currentMonth;
+  return raw > currentMonth ? currentMonth : raw;
 }
 
 export default async function HistoryPage({
@@ -34,14 +30,12 @@ export default async function HistoryPage({
   if (!user) redirect("/login");
 
   const [{ t, locale }, params] = await Promise.all([getTranslations(), searchParams]);
-  const limit = parseLimit(params.limit);
+  const today = getTodayDateString();
+  const month = parseMonth(params.month, today.slice(0, 7));
 
   // userId always comes from the server session, never from the client.
-  const [{ workouts, hasMore }, exercises] = await Promise.all([
-    getWorkoutHistoryForUser(user.id, limit),
-    getExercisesForUser(user.id),
-  ]);
-  const exerciseById = new Map(exercises.map((e) => [e.id, e]));
+  const days = await getWorkoutDaysForMonth(user.id, month);
+  const workoutByDate = new Map(days.map((day) => [day.date, day.id]));
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-5 py-10 lg:px-8 lg:py-14">
@@ -52,46 +46,13 @@ export default async function HistoryPage({
         <p className="text-sm text-muted-foreground">{t.history.pageSubtitle}</p>
       </div>
 
-      {workouts.length === 0 ? (
-        <div className="flex flex-col items-center gap-5 rounded-lg border border-dashed border-border px-5 py-20 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <History className="h-7 w-7" strokeWidth={1.75} />
-          </span>
-          <div className="flex flex-col gap-1.5">
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              {t.history.emptyState.title}
-            </h2>
-            <p className="max-w-md text-sm text-muted-foreground">
-              {t.history.emptyState.description}
-            </p>
-          </div>
-          <Button asChild>
-            <Link href="/treniruote">{t.history.emptyState.cta}</Link>
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {workouts.map((workout) => (
-            <HistoryCard
-              key={workout.id}
-              workout={workout}
-              exerciseById={exerciseById}
-              t={t}
-              locale={locale}
-            />
-          ))}
-
-          {hasMore && (
-            <div className="flex justify-center pt-4">
-              <Button asChild variant="outline">
-                <Link href={`/istorija?limit=${limit + PAGE_SIZE}`} scroll={false}>
-                  {t.history.loadMore}
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+      <HistoryCalendar
+        month={month}
+        today={today}
+        workoutByDate={workoutByDate}
+        t={t}
+        locale={locale}
+      />
     </div>
   );
 }

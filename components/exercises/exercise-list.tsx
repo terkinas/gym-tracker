@@ -3,6 +3,7 @@
 import * as React from "react";
 import { CheckCircle2, Download, Plus } from "lucide-react";
 
+import { categoryColorClass } from "@/lib/category-colors";
 import { Button } from "@/components/ui/button";
 import { ExerciseCard } from "@/components/exercises/exercise-card";
 import { ExerciseDialog } from "@/components/exercises/exercise-dialog";
@@ -42,6 +43,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [isImporting, setIsImporting] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const trimmedQuery = query.trim().toLowerCase();
   const isSearching = trimmedQuery.length > 0;
@@ -107,6 +109,8 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
   }
 
   async function handleDeleteExercise(exercise: Exercise) {
+    if (isDeleting) return;
+    setIsDeleting(true);
     try {
       await deleteExerciseAction(exercise.id);
       setExercises((current) => current.filter((item) => item.id !== exercise.id));
@@ -114,6 +118,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
     } catch {
       setError(t.exercises.errors.deleteFailed);
     } finally {
+      setIsDeleting(false);
       setExerciseToDelete(null);
     }
   }
@@ -173,7 +178,9 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
 
                 return (
                   <section key={category} className="flex flex-col gap-3">
-                    <h2 className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                    <h2
+                      className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold tracking-widest uppercase ${categoryColorClass(category)}`}
+                    >
                       {translateCategory(category, t)}
                     </h2>
 
@@ -214,9 +221,9 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
             <Button
               variant="outline"
               onClick={handleImportCityGymDefaults}
-              disabled={isImporting}
+              loading={isImporting}
             >
-              <Download className="h-4 w-4" strokeWidth={2} />
+              {!isImporting && <Download className="h-4 w-4" strokeWidth={2} />}
               {isImporting
                 ? t.exercises.importCityGymDefaultsPending
                 : t.exercises.importCityGymDefaults}
@@ -231,13 +238,11 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
           if (!open) setDialogState(null);
         }}
         exercise={dialogState?.mode === "edit" ? dialogState.exercise : null}
-        onSubmit={(values) => {
-          if (dialogState?.mode === "edit") {
-            handleUpdateExercise(dialogState.exercise.id, values);
-          } else {
-            handleAddExercise(values);
-          }
-        }}
+        onSubmit={(values) =>
+          dialogState?.mode === "edit"
+            ? handleUpdateExercise(dialogState.exercise.id, values)
+            : handleAddExercise(values)
+        }
       />
 
       <DeleteExerciseDialog
@@ -246,6 +251,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
           if (!open) setExerciseToDelete(null);
         }}
         onConfirm={handleDeleteExercise}
+        isDeleting={isDeleting}
       />
     </div>
   );

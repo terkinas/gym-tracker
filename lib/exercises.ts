@@ -10,6 +10,10 @@ export const EXERCISE_CATEGORIES = [
 
 export type ExerciseCategory = (typeof EXERCISE_CATEGORIES)[number];
 
+export function isExerciseCategory(value: unknown): value is ExerciseCategory {
+  return (EXERCISE_CATEGORIES as readonly unknown[]).includes(value);
+}
+
 export type Exercise = {
   id: string;
   userId: string;
@@ -18,6 +22,9 @@ export type Exercise = {
   /** Performed one arm at a time, but weight/reps are logged once per set
    * for both arms combined. */
   isOneHanded: boolean;
+  /** Other muscle groups worked besides `category` (the primary muscle).
+   * Only used for the optional indirect-sets view of weekly volume. */
+  secondaryMuscles: ExerciseCategory[];
   createdAt: string;
 };
 
@@ -26,6 +33,7 @@ export type ExerciseInput = {
   name: string;
   category: ExerciseCategory;
   isOneHanded: boolean;
+  secondaryMuscles: ExerciseCategory[];
 };
 
 // The predefined "CityGym" exercise set offered to a user with zero
@@ -37,14 +45,15 @@ export const CITYGYM_DEFAULT_EXERCISES: readonly {
   name: string;
   category: ExerciseCategory;
   isOneHanded?: boolean;
+  secondaryMuscles?: ExerciseCategory[];
 }[] = [
   // Krūtinė / Chest
-  { name: "Incline Bench Press", category: "Krūtinė" },
-  { name: "Chest Dips", category: "Krūtinė" },
+  { name: "Incline Bench Press", category: "Krūtinė", secondaryMuscles: ["Pečiai", "Tricepsas"] },
+  { name: "Chest Dips", category: "Krūtinė", secondaryMuscles: ["Tricepsas", "Pečiai"] },
   { name: "Pec Deck", category: "Krūtinė" },
   // Pečiai / Shoulders
   { name: "Lateral Raise Machine", category: "Pečiai" },
-  { name: "Machine Shoulder Press", category: "Pečiai" },
+  { name: "Machine Shoulder Press", category: "Pečiai", secondaryMuscles: ["Tricepsas"] },
   { name: "Single-Arm Lateral Raise", category: "Pečiai", isOneHanded: true },
   // Bicepsas / Biceps
   { name: "Biceps Curl Machine", category: "Bicepsas" },
@@ -53,13 +62,13 @@ export const CITYGYM_DEFAULT_EXERCISES: readonly {
   // Tricepsas / Triceps
   { name: "Overhead Cable Triceps Extension", category: "Tricepsas" },
   { name: "Triceps Press Machine", category: "Tricepsas" },
-  { name: "Triceps Dips", category: "Tricepsas" },
+  { name: "Triceps Dips", category: "Tricepsas", secondaryMuscles: ["Krūtinė", "Pečiai"] },
   { name: "Rope Triceps Pushdown", category: "Tricepsas" },
   // Nugara / Back
-  { name: "Lat Pulldown", category: "Nugara" },
+  { name: "Lat Pulldown", category: "Nugara", secondaryMuscles: ["Bicepsas"] },
   { name: "Straight-Arm Pulldown", category: "Nugara" },
   { name: "Back Extension", category: "Nugara" },
-  { name: "Seated Row Machine", category: "Nugara" },
+  { name: "Seated Row Machine", category: "Nugara", secondaryMuscles: ["Bicepsas"] },
   // Presas / Abs
   { name: "Kneeling Cable Crunch", category: "Presas" },
   { name: "Crunches", category: "Presas" },

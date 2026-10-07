@@ -58,6 +58,7 @@ function buildInitialExercises(
         weight: String(set.weight),
         reps: String(set.reps),
         hand: set.hand,
+        isHardSet: set.isHardSet,
       })),
     }));
 }
@@ -117,6 +118,7 @@ function buildValidatedPayload(
         weight,
         reps,
         hand: exercise.isOneHanded ? set.hand : null,
+        isHardSet: set.isHardSet,
       });
     }
 
@@ -145,6 +147,8 @@ export function WorkoutPage({
   const [activeExerciseId, setActiveExerciseId] = React.useState<string | null>(null);
   const [justAddedSetId, setJustAddedSetId] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
+  // Which exercise's "Done" is mid-save, so only that button shows the spinner.
+  const [savingDoneId, setSavingDoneId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
     null,
@@ -184,14 +188,26 @@ export function WorkoutPage({
   function handleAddSet(exerciseId: string) {
     const newSetId = generateId();
     setExercises((current) =>
-      current.map((exercise) =>
-        exercise.exerciseId === exerciseId
-          ? {
-              ...exercise,
-              sets: [...exercise.sets, { id: newSetId, weight: "", reps: "", hand: null }],
-            }
-          : exercise,
-      ),
+      current.map((exercise) => {
+        if (exercise.exerciseId !== exerciseId) return exercise;
+        // Start from the previous set's values so the user only has to nudge
+        // weight/reps (and the arm, for one-handed exercises) instead of
+        // re-entering everything. The first set of an exercise stays empty.
+        const previous = exercise.sets[exercise.sets.length - 1];
+        return {
+          ...exercise,
+          sets: [
+            ...exercise.sets,
+            {
+              id: newSetId,
+              weight: previous?.weight ?? "",
+              reps: previous?.reps ?? "",
+              hand: previous?.hand ?? null,
+              isHardSet: previous?.isHardSet ?? true,
+            },
+          ],
+        };
+      }),
     );
     setJustAddedSetId(newSetId);
     setActiveExerciseId(exerciseId);
@@ -241,6 +257,23 @@ export function WorkoutPage({
               ...exercise,
               sets: exercise.sets.map((set) =>
                 set.id === setId ? { ...set, hand: value } : set,
+              ),
+            }
+          : exercise,
+      ),
+    );
+    clearFeedback();
+  }
+
+  function handleChangeSetHardSet(exerciseId: string, setId: string, value: boolean) {
+    setActiveExerciseId(exerciseId);
+    setExercises((current) =>
+      current.map((exercise) =>
+        exercise.exerciseId === exerciseId
+          ? {
+              ...exercise,
+              sets: exercise.sets.map((set) =>
+                set.id === setId ? { ...set, isHardSet: value } : set,
               ),
             }
           : exercise,
@@ -299,6 +332,7 @@ export function WorkoutPage({
     }
 
     setIsSaving(true);
+    setSavingDoneId(exerciseId);
     try {
       await saveWorkoutAction(result.payload);
       setExercises((current) =>
@@ -311,6 +345,7 @@ export function WorkoutPage({
       setError(t.workout.validation.saveFailed);
     } finally {
       setIsSaving(false);
+      setSavingDoneId(null);
     }
   }
 
@@ -428,9 +463,14 @@ export function WorkoutPage({
                 onDeleteSet={(setId) =>
                     handleDeleteSet(exercise.exerciseId, setId)
                   }
+                  onChangeSetHardSet={(setId, value) =>
+                    handleChangeSetHardSet(exercise.exerciseId, setId, value)
+                  }
                   onAddSet={() => handleAddSet(exercise.exerciseId)}
                   onRequestRemove={() => setRemoveTarget(exercise)}
                   onDone={() => handleDoneExercise(exercise.exerciseId)}
+                  isSavingDone={savingDoneId === exercise.exerciseId}
+                  disabled={isSaving}
                 />
               ),
             )}
@@ -440,6 +480,7 @@ export function WorkoutPage({
             <Button
               size="lg"
               onClick={handleSave}
+              loading={isSaving && savingDoneId === null}
               disabled={isSaving}
               className="w-full sm:w-auto"
             >

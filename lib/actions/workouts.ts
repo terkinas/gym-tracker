@@ -21,6 +21,8 @@ export type SaveWorkoutSetInput = {
   /** "left" | "right" | null; ignored (stored as null) for exercises that
    * aren't one-handed. Untrusted — validated below. */
   hand?: SetHand | null;
+  /** Counts towards weekly hard-set volume. Missing → true (older clients). */
+  isHardSet?: boolean;
 };
 
 export type SaveWorkoutExerciseInput = {
@@ -93,6 +95,10 @@ export async function saveWorkoutAction(
         throw new Error("INVALID_HAND");
       }
 
+      if (set.isHardSet !== undefined && typeof set.isHardSet !== "boolean") {
+        throw new Error("INVALID_HARD_SET");
+      }
+
       return {
         id: typeof set.id === "string" && set.id.length > 0 ? set.id : crypto.randomUUID(),
         weight: set.weight,
@@ -100,6 +106,7 @@ export async function saveWorkoutAction(
         // A hand is only stored for one-handed exercises (normalized to null
         // for all others); legacy/unchosen one-handed sets stay null.
         hand: oneHandedIds.has(exercise.exerciseId) && isSetHand(set.hand) ? set.hand : null,
+        isHardSet: set.isHardSet ?? true,
       };
     });
 

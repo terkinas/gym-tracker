@@ -11,6 +11,7 @@ import {
 } from "@/lib/storage/exercises";
 import {
   EXERCISE_CATEGORIES,
+  isExerciseCategory,
   type Exercise,
   type ExerciseCategory,
   type ExerciseInput,
@@ -22,11 +23,14 @@ import {
 // Validates untrusted client input server-side. `isOneHanded` must be a real
 // boolean (not a truthy string/number) and the category must be one of the
 // known values — never trust the TypeScript types alone across the wire.
-function validateExerciseInput(values: {
+type ExerciseValues = {
   name: string;
   category: ExerciseCategory;
   isOneHanded?: boolean;
-}): ExerciseInput {
+  secondaryMuscles?: ExerciseCategory[];
+};
+
+function validateExerciseInput(values: ExerciseValues): ExerciseInput {
   const name = typeof values?.name === "string" ? values.name.trim() : "";
 
   if (!name) {
@@ -41,18 +45,28 @@ function validateExerciseInput(values: {
     throw new Error("INVALID_ONE_HANDED");
   }
 
+  if (
+    values.secondaryMuscles !== undefined &&
+    (!Array.isArray(values.secondaryMuscles) ||
+      !values.secondaryMuscles.every(isExerciseCategory))
+  ) {
+    throw new Error("INVALID_SECONDARY_MUSCLES");
+  }
+
+  // De-duplicated, and never includes the primary muscle itself.
+  const secondaryMuscles = [...new Set(values.secondaryMuscles ?? [])].filter(
+    (muscle) => muscle !== values.category,
+  );
+
   return {
     name,
     category: values.category,
     isOneHanded: values.isOneHanded ?? false,
+    secondaryMuscles,
   };
 }
 
-export async function createExerciseAction(values: {
-  name: string;
-  category: ExerciseCategory;
-  isOneHanded?: boolean;
-}): Promise<Exercise> {
+export async function createExerciseAction(values: ExerciseValues): Promise<Exercise> {
   const user = await requireUser();
   const input = validateExerciseInput(values);
 
@@ -63,7 +77,7 @@ export async function createExerciseAction(values: {
 
 export async function updateExerciseAction(
   exerciseId: string,
-  values: { name: string; category: ExerciseCategory; isOneHanded?: boolean },
+  values: ExerciseValues,
 ): Promise<Exercise> {
   const user = await requireUser();
   const input = validateExerciseInput(values);

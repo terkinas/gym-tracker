@@ -33,7 +33,7 @@ interface ExerciseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   exercise?: Exercise | null;
-  onSubmit: (values: ExerciseInput) => void;
+  onSubmit: (values: ExerciseInput) => void | Promise<void>;
 }
 
 export function ExerciseDialog({
@@ -67,7 +67,7 @@ export function ExerciseDialog({
 interface ExerciseFormProps {
   exercise?: Exercise | null;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: ExerciseInput) => void;
+  onSubmit: (values: ExerciseInput) => void | Promise<void>;
 }
 
 function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
@@ -81,10 +81,15 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
   const [isOneHanded, setIsOneHanded] = React.useState(
     exercise?.isOneHanded ?? false,
   );
+  const [secondaryMuscles, setSecondaryMuscles] = React.useState<ExerciseCategory[]>(
+    exercise?.secondaryMuscles ?? [],
+  );
   const [error, setError] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (isSubmitting) return;
 
     const trimmedName = name.trim();
 
@@ -98,7 +103,19 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
       return;
     }
 
-    onSubmit({ name: trimmedName, category, isOneHanded });
+    // Keep the dialog open (with a spinner on the button) until the server
+    // has answered; the parent reports failures on the page itself.
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        name: trimmedName,
+        category,
+        isOneHanded,
+        secondaryMuscles: secondaryMuscles.filter((muscle) => muscle !== category),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
     onOpenChange(false);
   }
 
@@ -136,6 +153,8 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
           value={category}
           onValueChange={(value) => {
             setCategory(value as ExerciseCategory);
+            // The primary muscle can't also be a secondary one.
+            setSecondaryMuscles((current) => current.filter((muscle) => muscle !== value));
             if (error) setError(null);
           }}
         >
@@ -151,6 +170,32 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
           </SelectContent>
         </Select>
       </div>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-medium text-foreground">
+          {t.exercises.dialog.secondaryLabel}
+        </legend>
+        <p className="text-xs text-muted-foreground">{t.exercises.dialog.secondaryHelp}</p>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {EXERCISE_CATEGORIES.filter((muscle) => muscle !== category).map((muscle) => (
+            <label key={muscle} className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={secondaryMuscles.includes(muscle)}
+                onChange={(event) =>
+                  setSecondaryMuscles((current) =>
+                    event.target.checked
+                      ? [...current, muscle]
+                      : current.filter((item) => item !== muscle),
+                  )
+                }
+                className="h-4 w-4 cursor-pointer rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              {translateCategory(muscle, t)}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div className="flex items-start gap-3">
         <input
@@ -180,11 +225,12 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
         <Button
           type="button"
           variant="outline"
+          disabled={isSubmitting}
           onClick={() => onOpenChange(false)}
         >
           {t.common.cancel}
         </Button>
-        <Button type="submit">
+        <Button type="submit" loading={isSubmitting}>
           {isEditing ? t.exercises.dialog.submitEdit : t.exercises.dialog.submitAdd}
         </Button>
       </DialogFooter>

@@ -110,3 +110,14 @@ export function formatSignedPercent(fraction: number, locale: Locale): string {
     signDisplay: "exceptZero",
   }).format(fraction);
 }
+
+/** Month heading for the history calendar, e.g. "2026 m. spalis" (lt) or
+ * "October 2026" (en). Takes any `YYYY-MM-DD` inside the month. */
+export function formatMonthYear(dateString: string, locale: Locale): string {
+  const date = new Date(`${dateString}T00:00:00Z`);
+  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
+    year: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
+}

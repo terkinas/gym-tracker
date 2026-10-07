@@ -11,7 +11,7 @@ import { OverallProgress } from "@/components/progress/overall-progress";
 import { ProgressSummary } from "@/components/progress/progress-summary";
 import { TimeRangeSelect } from "@/components/progress/time-range-select";
 import { TrainingActivityChart } from "@/components/progress/training-activity-chart";
-import { VolumeChart } from "@/components/progress/volume-chart";
+import { WeeklyVolume } from "@/components/progress/weekly-volume";
 import { CategoryProgressList } from "@/components/progress/category-progress";
 import { ExerciseProgress } from "@/components/progress/exercise-progress";
 import {
@@ -19,7 +19,6 @@ import {
   getExerciseProgress,
   getProgressSummary,
   getTrainingActivity,
-  getVolumeProgression,
 } from "@/lib/progress/analytics";
 import type { ProgressOverview, TimeRange } from "@/lib/progress/analytics";
 import type { Exercise } from "@/lib/exercises";
@@ -67,10 +66,6 @@ export function ProgressDashboard({ workouts, exercises, overview }: ProgressDas
     [workouts, exercises],
   );
   const activity = React.useMemo(() => getTrainingActivity(workouts, range), [workouts, range]);
-  const volumeSeries = React.useMemo(
-    () => getVolumeProgression(workouts, range),
-    [workouts, range],
-  );
   const categories = React.useMemo(
     () => getCategoryProgress(workouts, exercises, range),
     [workouts, exercises, range],
@@ -111,11 +106,11 @@ export function ProgressDashboard({ workouts, exercises, overview }: ProgressDas
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">
-                    {t.progress.charts.volumeProgressTitle}
+                    {t.progress.weeklyVolume.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <VolumeChart data={volumeSeries} />
+                  <WeeklyVolume workouts={workouts} exercises={exercises} />
                 </CardContent>
               </Card>
             </div>

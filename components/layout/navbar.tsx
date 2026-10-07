@@ -3,6 +3,7 @@ import Link from "next/link";
 import { desktopNavItems } from "@/components/layout/nav-items";
 import { Logo } from "@/components/layout/logo";
 import { NavLink } from "@/components/layout/nav-link";
+import { LogoutButton } from "@/components/layout/logout-button";
 import { MobileUserMenu } from "@/components/layout/mobile-user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,7 @@ export async function Navbar() {
               <LanguageSwitcher />
               <span className="hidden text-sm text-muted-foreground lg:inline">{user.name}</span>
               <form action={logoutAction}>
-                <Button type="submit" variant="outline" size="sm">
-                  {t.nav.logOut}
-                </Button>
+                <LogoutButton>{t.nav.logOut}</LogoutButton>
               </form>
             </div>
 

@@ -23,8 +23,8 @@ import { isSetHand, type SetHand } from "@/lib/types/workout";
  * exactly the previous layout. */
 export function setGridClass(isOneHanded: boolean): string {
   return isOneHanded
-    ? "grid-cols-[1.25rem_minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,1.2fr)_2rem] gap-2 sm:grid-cols-[2rem_6rem_5rem_7rem_2rem] sm:gap-3"
-    : "grid-cols-[1.75rem_minmax(0,1.3fr)_minmax(0,1fr)_2rem] gap-2.5 sm:grid-cols-[2rem_6rem_5rem_2rem] sm:gap-3";
+    ? "grid-cols-[1.25rem_minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,1.2fr)_1.75rem_2rem] gap-2 sm:grid-cols-[2rem_6rem_5rem_7rem_3rem_2rem] sm:gap-3"
+    : "grid-cols-[1.75rem_minmax(0,1.3fr)_minmax(0,1fr)_2rem_2rem] gap-2.5 sm:grid-cols-[2rem_6rem_5rem_3rem_2rem] sm:gap-3";
 }
 
 interface WorkoutSetRowProps {
@@ -36,6 +36,7 @@ interface WorkoutSetRowProps {
   onChangeWeight: (value: string) => void;
   onChangeReps: (value: string) => void;
   onChangeHand: (value: SetHand) => void;
+  onChangeHardSet: (value: boolean) => void;
   onDelete: () => void;
 }
 
@@ -47,6 +48,7 @@ export function WorkoutSetRow({
   onChangeWeight,
   onChangeReps,
   onChangeHand,
+  onChangeHardSet,
   onDelete,
 }: WorkoutSetRowProps) {
   const t = useTranslations();
@@ -103,6 +105,14 @@ export function WorkoutSetRow({
           </SelectContent>
         </Select>
       )}
+
+      <input
+        type="checkbox"
+        checked={set.isHardSet}
+        onChange={(event) => onChangeHardSet(event.target.checked)}
+        aria-label={t.workout.hardSetAria(setNumber)}
+        className="mx-auto h-5 w-5 cursor-pointer rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
 
       <button
         type="button"

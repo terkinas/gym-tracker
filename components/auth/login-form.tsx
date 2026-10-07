@@ -62,7 +62,7 @@ export function LoginForm() {
         </CardContent>
 
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={pending}>
+          <Button type="submit" className="w-full" loading={pending}>
             {pending ? t.auth.login.submitPending : t.auth.login.submit}
           </Button>
           <p className="text-center text-sm text-muted-foreground">

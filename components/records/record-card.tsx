@@ -1,5 +1,6 @@
 import { Dumbbell, Repeat, Trophy } from "lucide-react";
 
+import { categoryColorClass } from "@/lib/category-colors";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Exercise } from "@/lib/exercises";
@@ -58,7 +59,9 @@ export function RecordCard({
       <div className="flex min-w-0 flex-col gap-1.5">
         <h2 className="text-base font-semibold break-words text-foreground">{exercise.name}</h2>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge>{translateCategory(exercise.category, t)}</Badge>
+          <Badge className={categoryColorClass(exercise.category)}>
+            {translateCategory(exercise.category, t)}
+          </Badge>
           {exercise.isOneHanded && (
             <Badge className="bg-transparent text-muted-foreground">
               {t.workout.oneHandedBadge}

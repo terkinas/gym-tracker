@@ -8,6 +8,7 @@ import {
   type Exercise,
   type ExerciseCategory,
   type ExerciseInput,
+  isExerciseCategory,
 } from "@/lib/exercises";
 
 function toExercise(row: {
@@ -16,6 +17,7 @@ function toExercise(row: {
   name: string;
   category: string;
   isOneHanded: boolean;
+  secondaryMuscles: string[];
   createdAt: Date;
 }): Exercise {
   return {
@@ -28,6 +30,7 @@ function toExercise(row: {
     // ExerciseCategory.
     category: row.category as ExerciseCategory,
     isOneHanded: row.isOneHanded,
+    secondaryMuscles: row.secondaryMuscles.filter(isExerciseCategory),
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -50,6 +53,7 @@ export async function createExercise(
       name: data.name,
       category: data.category,
       isOneHanded: data.isOneHanded,
+      secondaryMuscles: data.secondaryMuscles,
     },
   });
   return toExercise(row);
@@ -70,6 +74,7 @@ export async function updateExercise(
       name: data.name,
       category: data.category,
       isOneHanded: data.isOneHanded,
+      secondaryMuscles: data.secondaryMuscles,
     },
   });
 
@@ -114,6 +119,7 @@ export async function importCityGymDefaults(userId: string): Promise<Exercise[]>
         name: exercise.name,
         category: exercise.category,
         isOneHanded: exercise.isOneHanded ?? false,
+        secondaryMuscles: exercise.secondaryMuscles ?? [],
       })),
     });
 

@@ -75,8 +75,8 @@ export function ExerciseProgress({
                 value={formatCount(progress.bestReps ?? 0, locale)}
               />
               <Stat
-                label={t.progress.exerciseProgress.statTotalVolume}
-                value={formatVolume(progress.totalVolume, locale)}
+                label={t.progress.exerciseProgress.statHardSets}
+                value={formatCount(progress.hardSets, locale)}
               />
               <Stat
                 label={t.progress.exerciseProgress.statSessions}

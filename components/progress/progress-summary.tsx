@@ -6,7 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ProgressSummary as ProgressSummaryData } from "@/lib/progress/analytics";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
-import { formatCount, formatDate, formatVolume, pluralize } from "@/lib/i18n/format";
+import { formatCount, formatDate, pluralize } from "@/lib/i18n/format";
 
 interface ProgressSummaryProps {
   summary: ProgressSummaryData;
@@ -31,8 +31,8 @@ export function ProgressSummary({ summary }: ProgressSummaryProps) {
         />
         <SummaryCard
           icon={Activity}
-          label={t.progress.summary.volume}
-          value={formatVolume(summary.totalVolume, locale)}
+          label={t.progress.summary.hardSets}
+          value={formatCount(summary.totalHardSets, locale)}
         />
         <SummaryCard
           icon={ListChecks}

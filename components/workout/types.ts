@@ -11,6 +11,8 @@ export type ClientSet = {
   /** Arm used for this set. Only used when the exercise is one-handed;
    * null = not chosen yet (required before saving). */
   hand: SetHand | null;
+  /** "Hard set" checkbox: counts towards weekly muscle volume. */
+  isHardSet: boolean;
 };
 
 export type ClientExercise = {

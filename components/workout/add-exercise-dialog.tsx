@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { categoryColorClass } from "@/lib/category-colors";
 import { Badge } from "@/components/ui/badge";
 import type { Exercise } from "@/lib/exercises";
 import { useTranslations } from "@/lib/i18n/locale-context";
@@ -106,7 +107,9 @@ export function AddExerciseDialog({
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                       {exercise.name}
                     </span>
-                    <Badge className="max-w-[40%] shrink-0 overflow-hidden text-ellipsis">
+                    <Badge
+                      className={`max-w-[40%] shrink-0 overflow-hidden text-ellipsis ${categoryColorClass(exercise.category)}`}
+                    >
                       {translateCategory(exercise.category, t)}
                     </Badge>
                   </button>

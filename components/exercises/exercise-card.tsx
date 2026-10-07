@@ -2,6 +2,7 @@
 
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 
+import { categoryColorClass } from "@/lib/category-colors";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -29,7 +30,9 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
           {exercise.name}
         </span>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge>{translateCategory(exercise.category, t)}</Badge>
+          <Badge className={categoryColorClass(exercise.category)}>
+            {translateCategory(exercise.category, t)}
+          </Badge>
           {exercise.isOneHanded && (
             <Badge className="bg-transparent text-muted-foreground">
               {t.workout.oneHandedBadge}
