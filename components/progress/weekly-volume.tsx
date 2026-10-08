@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 
+import { Switch } from "@/components/ui/switch";
+import { categoryMeta } from "@/components/workout/workout-ui";
 import { translateCategory } from "@/lib/i18n/categories";
 import { formatDate } from "@/lib/i18n/format";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
@@ -43,7 +45,7 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
           type="button"
           onClick={() => setWeekStart(addDaysToDateString(weekStart, -7))}
           aria-label={w.previousWeek}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
         </button>
@@ -56,19 +58,14 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
           onClick={() => setWeekStart(addDaysToDateString(weekStart, 7))}
           disabled={isCurrentWeek}
           aria-label={w.nextWeek}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
         >
           <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
         </button>
       </div>
 
-      <label className="flex cursor-pointer items-center gap-3 text-sm text-foreground">
-        <input
-          type="checkbox"
-          checked={showIndirect}
-          onChange={(event) => setShowIndirect(event.target.checked)}
-          className="h-4 w-4 cursor-pointer rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-foreground">
+        <Switch checked={showIndirect} onCheckedChange={setShowIndirect} />
         {w.toggleIndirect}
       </label>
 
@@ -85,9 +82,9 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
                   : w.directOnly(row.direct)}
               </span>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-primary"
+                className={`h-full rounded-full motion-safe:transition-[width] motion-safe:duration-200 ${categoryMeta(row.muscle).bar}`}
                 style={{ width: `${(row.direct / maxDirect) * 100}%` }}
               />
             </div>
@@ -101,6 +98,11 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
       </p>
       {totalDirect === 0 && <p className="text-xs text-muted-foreground">{w.noSets}</p>}
       {showIndirect && <p className="text-xs text-muted-foreground">{w.indirectNote}</p>}
+
+      <p className="flex items-start gap-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+        <span>{t.progress.ui.volumeNote}</span>
+      </p>
     </div>
   );
 }

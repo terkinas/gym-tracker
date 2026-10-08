@@ -35,7 +35,7 @@ export default async function ProgressPage() {
   const overview = calculateProgressOverview(workouts);
 
   return (
-    <div className="mx-auto w-full max-w-6xl flex-1 px-5 py-10 lg:px-8 lg:py-14">
+    <div className="mx-auto w-full max-w-5xl flex-1 px-5 py-10 lg:px-8 lg:py-14">
       <ProgressDashboard workouts={workouts} exercises={exercises} overview={overview} />
     </div>
   );

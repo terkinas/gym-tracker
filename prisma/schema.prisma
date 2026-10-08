@@ -46,6 +46,9 @@ model User {
   name         String
   username     String   @unique
   passwordHash String
+  /// The user's current body weight in kg. One value per user, independent of
+  /// any workout; null = not entered. Used for bodyweight exercises.
+  bodyWeight   Float?
   createdAt    DateTime @default(now())
 
   exercises Exercise[]
@@ -104,6 +107,9 @@ model WorkoutExercise {
   /// state of this specific workout exercise, so it lives here rather than in
   /// a separate table. Does not affect sets, history, PRs or analytics.
   completed  Boolean @default(false)
+  /// This is a bodyweight exercise: each set's weight is EXTRA weight on top
+  /// of the workout's body weight (0 = bodyweight only).
+  usesBodyweight Boolean @default(false)
 
   workout Workout      @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   sets    WorkoutSet[]

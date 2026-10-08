@@ -28,6 +28,7 @@ type WorkoutRow = {
   exercises: {
     exerciseId: string;
     completed: boolean;
+    usesBodyweight: boolean;
     sets: {
       id: string;
       weight: number;
@@ -46,6 +47,7 @@ function toWorkout(row: WorkoutRow): Workout {
     exercises: row.exercises.map((exercise) => ({
       exerciseId: exercise.exerciseId,
       completed: exercise.completed,
+      usesBodyweight: exercise.usesBodyweight,
       sets: exercise.sets.map((set) => ({
         id: set.id,
         weight: set.weight,
@@ -122,6 +124,7 @@ export async function createOrUpdateWorkout(
           workoutId: workout.id,
           exerciseId: exercise.exerciseId,
           completed: exercise.completed,
+          usesBodyweight: exercise.usesBodyweight,
           position: exerciseIndex,
           sets: {
             create: exercise.sets.map((set, setIndex) => ({
@@ -219,6 +222,8 @@ export async function getWorkoutByIdForUser(
  * combined weight/reps, so there's nothing special to do for them. */
 export type LastExerciseSession = {
   date: string;
+  /** The exercise was a bodyweight exercise that time (set weights = extra). */
+  usesBodyweight: boolean;
   sets: { weight: number; reps: number; hand: SetHand | null }[];
 };
 
@@ -246,13 +251,25 @@ export async function getLastWorkoutDataForExercises(
       workout: { userId, date: { lt: beforeDate } },
     },
     orderBy: { workout: { date: "desc" } },
-    select: { id: true, exerciseId: true, workout: { select: { date: true } } },
+    select: {
+      id: true,
+      exerciseId: true,
+      usesBodyweight: true,
+      workout: { select: { date: true } },
+    },
   });
 
-  const latestByExercise = new Map<string, { id: string; date: string }>();
+  const latestByExercise = new Map<
+    string,
+    { id: string; date: string; usesBodyweight: boolean }
+  >();
   for (const row of candidates) {
     if (!latestByExercise.has(row.exerciseId)) {
-      latestByExercise.set(row.exerciseId, { id: row.id, date: row.workout.date });
+      latestByExercise.set(row.exerciseId, {
+        id: row.id,
+        date: row.workout.date,
+        usesBodyweight: row.usesBodyweight,
+      });
     }
   }
   if (latestByExercise.size === 0) return {};
@@ -285,8 +302,8 @@ export async function getLastWorkoutDataForExercises(
   );
 
   const result: Record<string, LastExerciseSession> = {};
-  for (const [exerciseId, { id, date }] of latestByExercise) {
-    result[exerciseId] = { date, sets: setsById.get(id) ?? [] };
+  for (const [exerciseId, { id, date, usesBodyweight }] of latestByExercise) {
+    result[exerciseId] = { date, usesBodyweight, sets: setsById.get(id) ?? [] };
   }
   return result;
 }

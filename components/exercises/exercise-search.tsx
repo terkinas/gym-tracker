@@ -14,18 +14,19 @@ export function ExerciseSearch({ value, onChange }: ExerciseSearchProps) {
   const t = useTranslations();
 
   return (
-    <div className="relative w-full sm:max-w-xs">
+    <div className="relative w-full">
       <Search
-        className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute top-1/2 left-4 h-[1.125rem] w-[1.125rem] -translate-y-1/2 text-muted-foreground"
         strokeWidth={1.75}
+        aria-hidden="true"
       />
       <Input
-        type="text"
+        type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={t.common.searchExercise.placeholder}
         aria-label={t.common.searchExercise.label}
-        className="pl-9"
+        className="h-12 rounded-xl bg-muted/20 pl-11 text-base shadow-none sm:text-sm [&::-webkit-search-cancel-button]:hidden"
       />
     </div>
   );

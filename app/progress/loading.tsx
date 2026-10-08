@@ -1,5 +1,5 @@
 import { PageSkeleton } from "@/components/layout/page-skeleton";
 
 export default async function Loading() {
-  return <PageSkeleton width="max-w-6xl" blocks={4} />;
+  return <PageSkeleton width="max-w-5xl" blocks={4} />;
 }

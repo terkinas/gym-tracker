@@ -87,3 +87,15 @@ export async function createUser(data: {
     throw error;
   }
 }
+
+/** The user's saved body weight in kg, or null if none. `userId` must come
+ * from the authenticated session. */
+export async function getUserBodyWeight(userId: string): Promise<number | null> {
+  const row = await db.user.findUnique({ where: { id: userId }, select: { bodyWeight: true } });
+  return row?.bodyWeight ?? null;
+}
+
+/** Stores (or clears, with null) the user's current body weight. */
+export async function setUserBodyWeight(userId: string, bodyWeight: number | null): Promise<void> {
+  await db.user.update({ where: { id: userId }, data: { bodyWeight } });
+}

@@ -4,15 +4,15 @@ import { WheelPicker } from "@/components/workout/wheel-picker";
 import { formatCount } from "@/lib/i18n/format";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
 
-/** Weight wheel: 0–200 kg in 2.5 kg steps. Also used by the workout page's
+/** Weight wheel: 0–200 kg in 1 kg steps. Also used by the workout page's
  * validation so the picker and the save check can never disagree. */
 export const WEIGHT_MIN = 0;
 export const WEIGHT_MAX = 200;
-export const WEIGHT_STEP = 2.5;
+export const WEIGHT_STEP = 1;
 
 const WEIGHT_OPTIONS: readonly number[] = Array.from(
   { length: (WEIGHT_MAX - WEIGHT_MIN) / WEIGHT_STEP + 1 },
-  // Multiples of 2.5 are exact in binary floating point, so no rounding drift.
+  // Whole numbers are exact in floating point, so no rounding drift.
   (_, i) => WEIGHT_MIN + i * WEIGHT_STEP,
 );
 

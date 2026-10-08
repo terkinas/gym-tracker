@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CategoryTile } from "@/components/workout/workout-ui";
 import { categoryColorClass } from "@/lib/category-colors";
 import { Badge } from "@/components/ui/badge";
 import type { Exercise } from "@/lib/exercises";
@@ -102,16 +103,24 @@ export function AddExerciseDialog({
                     key={exercise.id}
                     type="button"
                     onClick={() => onSelect(exercise)}
-                    className="flex min-h-12 w-full min-w-0 items-center justify-between gap-3 rounded-md border border-border bg-card px-3.5 py-2.5 text-left transition-colors hover:border-foreground/15 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-accent/70"
+                    className="group flex min-h-14 w-full min-w-0 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-left transition-[background-color,border-color,transform] duration-150 hover:border-foreground/15 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.99] active:bg-accent/70"
                   >
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                      {exercise.name}
+                    <CategoryTile category={exercise.category} className="h-9 w-9" />
+                    <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                      <span className="w-full truncate text-sm font-medium text-foreground">
+                        {exercise.name}
+                      </span>
+                      <Badge
+                        className={`max-w-full overflow-hidden px-2 py-0 text-[0.7rem] leading-4 text-ellipsis ${categoryColorClass(exercise.category)}`}
+                      >
+                        {translateCategory(exercise.category, t)}
+                      </Badge>
                     </span>
-                    <Badge
-                      className={`max-w-[40%] shrink-0 overflow-hidden text-ellipsis ${categoryColorClass(exercise.category)}`}
-                    >
-                      {translateCategory(exercise.category, t)}
-                    </Badge>
+                    <Plus
+                      className="h-4 w-4 shrink-0 text-muted-foreground transition-colors duration-150 group-hover:text-primary"
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    />
                   </button>
                 ))
               ) : (

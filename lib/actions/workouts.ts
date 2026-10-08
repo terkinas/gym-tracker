@@ -29,6 +29,8 @@ export type SaveWorkoutExerciseInput = {
   exerciseId: string;
   /** Optional for backwards compatibility; anything but `true` means false. */
   completed?: boolean;
+  /** Bodyweight exercise (set weights are extra weight). Missing → false. */
+  usesBodyweight?: boolean;
   sets: SaveWorkoutSetInput[];
 };
 
@@ -110,9 +112,14 @@ export async function saveWorkoutAction(
       };
     });
 
+    if (exercise.usesBodyweight !== undefined && typeof exercise.usesBodyweight !== "boolean") {
+      throw new Error("INVALID_USES_BODYWEIGHT");
+    }
+
     validatedExercises.push({
       exerciseId: exercise.exerciseId,
       completed: exercise.completed === true,
+      usesBodyweight: exercise.usesBodyweight === true,
       sets: validatedSets,
     });
   }

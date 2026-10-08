@@ -1,5 +1,7 @@
 "use client";
 
+import { Trash2, X } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,8 +31,8 @@ export function DeleteExerciseDialog({
 
   return (
     <Dialog open={exercise !== null} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="pr-8">
           <DialogTitle>{t.exercises.deleteDialog.title}</DialogTitle>
           <DialogDescription>
             {exercise ? t.exercises.deleteDialog.description(exercise.name) : null}
@@ -38,16 +40,23 @@ export function DeleteExerciseDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <Button variant="outline" disabled={isDeleting} onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            disabled={isDeleting}
+            onClick={() => onOpenChange(false)}
+            className="h-12 rounded-xl sm:h-11"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
             {t.common.cancel}
           </Button>
           <Button
             loading={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="h-12 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:h-11"
             onClick={() => {
               if (exercise) onConfirm(exercise);
             }}
           >
+            {!isDeleting && <Trash2 className="h-4 w-4" strokeWidth={2} />}
             {t.exercises.deleteDialog.confirm}
           </Button>
         </DialogFooter>

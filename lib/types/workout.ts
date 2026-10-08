@@ -23,6 +23,9 @@ export type WorkoutExercise = {
   exerciseId: string;
   /** "I'm done with this exercise" was tapped (persisted per workout exercise). */
   completed: boolean;
+  /** Bodyweight exercise: set weights are extra weight on top of the user's
+   * saved body weight (0 = bodyweight only). */
+  usesBodyweight: boolean;
   sets: WorkoutSet[];
 };
 

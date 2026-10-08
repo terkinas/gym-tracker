@@ -25,7 +25,8 @@ interface ChartTooltipProps {
 
 /** Custom tooltip content for the dashboard's recharts charts — recharts
  * calls this with `active`/`payload`/`label` injected, so pass it as
- * `content={(props) => <ChartTooltip {...props} valueLabel="..." />}`. */
+ * `content={(props) => <ChartTooltip {...props} valueLabel="..." />}`.
+ * Shows the full date and one labelled value. */
 export function ChartTooltip({
   active,
   label,
@@ -41,13 +42,13 @@ export function ChartTooltip({
   const value = typeof rawValue === "number" ? rawValue : Number(rawValue ?? 0);
 
   return (
-    <div className="rounded-md border border-border bg-popover px-3 py-2 text-xs shadow-md">
+    <div className="rounded-xl border border-border bg-popover px-3 py-2 text-xs shadow-lg">
       <p className="mb-1 font-medium text-foreground">
         {label !== undefined ? formatDate(String(label), locale) : ""}
       </p>
       <p className="text-muted-foreground">
         {valueLabel ? `${valueLabel}: ` : ""}
-        <span className="font-medium text-foreground">
+        <span className="font-semibold text-foreground tabular-nums">
           {valueFormatter ? valueFormatter(value) : value}
         </span>
       </p>

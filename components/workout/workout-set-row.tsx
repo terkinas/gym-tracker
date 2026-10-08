@@ -23,13 +23,15 @@ import { isSetHand, type SetHand } from "@/lib/types/workout";
  * exactly the previous layout. */
 export function setGridClass(isOneHanded: boolean): string {
   return isOneHanded
-    ? "grid-cols-[1.25rem_minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,1.2fr)_1.75rem_2rem] gap-2 sm:grid-cols-[2rem_6rem_5rem_7rem_3rem_2rem] sm:gap-3"
-    : "grid-cols-[1.75rem_minmax(0,1.3fr)_minmax(0,1fr)_2rem_2rem] gap-2.5 sm:grid-cols-[2rem_6rem_5rem_3rem_2rem] sm:gap-3";
+    ? "grid-cols-[1.5rem_minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_2rem_2.25rem] gap-1.5 sm:grid-cols-[2rem_6rem_5rem_7rem_3rem_2.5rem] sm:gap-3"
+    : "grid-cols-[1.5rem_minmax(0,1.3fr)_minmax(0,1fr)_2rem_2.25rem] gap-2 sm:grid-cols-[2rem_6rem_5rem_3rem_2.5rem] sm:gap-3";
 }
 
 interface WorkoutSetRowProps {
   set: ClientSet;
   setNumber: number;
+  /** First row of the exercise: only subtly emphasised. */
+  isFirst?: boolean;
   /** Shows the left/right control. Never true for ordinary exercises. */
   isOneHanded: boolean;
   autoFocus?: boolean;
@@ -43,6 +45,7 @@ interface WorkoutSetRowProps {
 export function WorkoutSetRow({
   set,
   setNumber,
+  isFirst = false,
   isOneHanded,
   autoFocus,
   onChangeWeight,
@@ -67,24 +70,40 @@ export function WorkoutSetRow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Wheel wrapper: a barely-there ring while a wheel is being used.
+  const pickerWrapClass =
+    "min-w-0 rounded-xl transition-shadow duration-150 focus-within:ring-1 focus-within:ring-primary/30";
+
   return (
     <div
       ref={rowRef}
-      className={`grid items-center ${setGridClass(isOneHanded)}`}
+      className={`grid items-center ${setGridClass(isOneHanded)} ${
+        isFirst ? "" : "border-t border-border/40 pt-2"
+      } ${autoFocus ? "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-200" : ""}`}
     >
-      <span className="text-sm text-muted-foreground">{setNumber}</span>
+      <span
+        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium tabular-nums ${
+          isFirst ? "bg-foreground/10 text-foreground" : "bg-muted/60 text-muted-foreground"
+        }`}
+      >
+        {setNumber}
+      </span>
 
-      <WeightPicker
-        value={set.weight}
-        onChange={onChangeWeight}
-        ariaLabel={t.workout.weightAria(setNumber)}
-      />
+      <div className={pickerWrapClass}>
+        <WeightPicker
+          value={set.weight}
+          onChange={onChangeWeight}
+          ariaLabel={t.workout.weightAria(setNumber)}
+        />
+      </div>
 
-      <RepsPicker
-        value={set.reps}
-        onChange={onChangeReps}
-        ariaLabel={t.workout.repsAria(setNumber)}
-      />
+      <div className={pickerWrapClass}>
+        <RepsPicker
+          value={set.reps}
+          onChange={onChangeReps}
+          ariaLabel={t.workout.repsAria(setNumber)}
+        />
+      </div>
 
       {isOneHanded && (
         <Select
@@ -95,7 +114,7 @@ export function WorkoutSetRow({
         >
           <SelectTrigger
             aria-label={t.workout.handAria(setNumber)}
-            className="h-11 gap-1 px-2 text-xs sm:px-3 sm:text-sm"
+            className="h-11 gap-1 rounded-xl px-2 text-xs sm:px-3 sm:text-sm"
           >
             <SelectValue placeholder={t.workout.hand.placeholder} />
           </SelectTrigger>
@@ -106,21 +125,24 @@ export function WorkoutSetRow({
         </Select>
       )}
 
-      <input
-        type="checkbox"
-        checked={set.isHardSet}
-        onChange={(event) => onChangeHardSet(event.target.checked)}
-        aria-label={t.workout.hardSetAria(setNumber)}
-        className="mx-auto h-5 w-5 cursor-pointer rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      />
+      {/* 44px tap area around the 20px checkbox. */}
+      <label className="mx-auto flex h-11 w-11 cursor-pointer items-center justify-center justify-self-center">
+        <input
+          type="checkbox"
+          checked={set.isHardSet}
+          onChange={(event) => onChangeHardSet(event.target.checked)}
+          aria-label={t.workout.hardSetAria(setNumber)}
+          className="h-5 w-5 cursor-pointer rounded border-input accent-primary transition-transform duration-150 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </label>
 
       <button
         type="button"
         onClick={() => setConfirmingDelete(true)}
         aria-label={t.workout.deleteSetAria(setNumber)}
-        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-11 w-11 items-center justify-center justify-self-center rounded-xl text-muted-foreground transition-[color,background-color,transform] duration-150 hover:bg-destructive/10 hover:text-destructive active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+        <Trash2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
       </button>
 
       <DeleteSetDialog

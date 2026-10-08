@@ -99,6 +99,8 @@ const lt = {
     addExercise: "Pridėti pratimą",
     addSet: "Pridėti seriją",
     saveWorkout: "Išsaugoti treniruotę",
+    saveWorkoutShort: "Išsaugoti",
+    doneBadge: "Baigta",
     saveWorkoutPending: "Saugoma...",
     saved: "Treniruotė išsaugota.",
     emptyStateMessage: "Pridėk pratimus ir pradėk registruoti savo serijas.",
@@ -109,6 +111,23 @@ const lt = {
     undoDoneAction: "Atšaukti",
     exerciseMarkedDone: (name: string) => `„${name}“ pažymėtas kaip baigtas.`,
     oneHandedHint: "Kiekvienai serijai pasirink, su kuria ranka ją atlikai.",
+    bodyWeight: {
+      label: "Kūno svoris",
+      placeholder: "pvz., 82",
+      invalid: "Kūno svoris turi būti nuo 20 iki 300 kg (galima vienas skaitmuo po kablelio).",
+      save: "Išsaugoti",
+      edit: "Redaguoti",
+      saved: "Kūno svoris išsaugotas.",
+      saveFailed: "Nepavyko išsaugoti kūno svorio. Bandyk dar kartą.",
+    },
+    bodyweightExercise: {
+      label: "Naudoju kūno svorį",
+      hint: "KG – papildomas svoris. 0 kg = tik kūno svoris.",
+      extraHeader: "+KG",
+      noBodyWeight: "Viršuje įvesk ir išsaugok savo kūno svorį. KG – papildomas svoris.",
+      current: (weight: string) => `Kūno svoris: ${weight}`,
+      effectiveLoad: (loads: string) => `Efektyvus svoris: ${loads}`,
+    },
     oneHandedBadge: "Viena ranka",
     allExercisesDone: "Visi pratimai baigti. Gali pridėti dar vieną arba išsaugoti treniruotę.",
     weightAria: (setNumber: number) => `${setNumber} serijos svoris kilogramais`,
@@ -149,8 +168,23 @@ const lt = {
     },
   },
   exercises: {
-    pageTitle: "Pratimų sąrašas",
-    pageSubtitle: "Tvarkyk savo pratimus pagal raumenų grupes.",
+    pageTitle: "Pratimai",
+    pageSubtitle: "Tvarkyk savo pratimų biblioteką.",
+    count: (n: number) => {
+      const lastTwo = n % 100;
+      const last = n % 10;
+      if (last === 1 && lastTwo !== 11) return `${n} pratimas`;
+      if (last === 0 || (lastTwo >= 11 && lastTwo <= 19)) return `${n} pratimų`;
+      return `${n} pratimai`;
+    },
+    filters: {
+      label: "Filtruoti pagal kategoriją",
+      all: "Visi",
+    },
+    editFor: (name: string) => `Redaguoti „${name}“`,
+    deleteFor: (name: string) => `Ištrinti „${name}“`,
+    or: "arba",
+    importHelp: "Vienu paspaudimu įkelk paruoštą CityGym pratimų rinkinį.",
     addExercise: "Pridėti pratimą",
     addFirstExercise: "Pridėti pirmą pratimą",
     importCityGymDefaults: "Importuoti CityGym pratimus",
@@ -195,7 +229,7 @@ const lt = {
   },
   progress: {
     pageTitle: "Progresas",
-    pageSubtitle: "Sek savo treniruočių progresą ir stiprėjimą.",
+    pageSubtitle: "Stebėk savo treniruočių progresą ir nuoseklumą.",
     emptyState: {
       title: "Dar nėra treniruočių duomenų",
       description: "Atlik pirmą treniruotę ir čia galėsi matyti savo progresą.",
@@ -302,6 +336,64 @@ const lt = {
         streak30: "30 treniruočių serija",
       },
     },
+    ui: {
+      rangeAria: "Laikotarpis",
+      rangesShort: { "7": "7D", "30": "30D", "90": "90D", all: "Visas" },
+      scoreExplain:
+        "Bendras tavo progreso įvertinimas nuo 0 iki 1000: jėga, nuoseklumas, rekordai ir aktyvumas.",
+      scoreOutOf: "iš 1000",
+      allTimeScoreNote:
+        "Progreso balas skaičiuojamas 7, 30 ir 90 dienų laikotarpiams, todėl čia rodomas 90 dienų balas.",
+      progressExplain: "Jėgos pokytis, palyginti su tavo ankstesniais rezultatais.",
+      noScoreCta: "Pradėti treniruotę",
+      breakdownHint: "Ilgesnė juosta reiškia, kad toje dalyje sekasi geriau.",
+      componentHints: {
+        strength: "Ar kyla tavo svoriai, lyginant su tavo paties ankstesniais rezultatais.",
+        consistency: "Kaip reguliariai treniruojiesi.",
+        prProgress: "Kiek naujų asmeninių rekordų pasiekei.",
+        activity: "Kiek treniruočių ir serijų atlikai.",
+      },
+      kpi: {
+        workoutsHint: "Atliktos treniruotės",
+        setsHint: "Atliktos serijos",
+        prsHint: "Nauji asmeniniai rekordai",
+        streakHint: "Treniruočių dienų serija",
+        exercisesLabel: "Pratimai",
+        exercisesHint: "Skirtingi pratimai per laikotarpį",
+        longest: "Ilgiausia",
+      },
+      activity: {
+        subtitle:
+          "Kiekviena juosta – treniruotės diena, o jos aukštis – tą dieną atliktų serijų skaičius.",
+      },
+      volumeNote:
+        "Tai sunkių serijų skaičius pagal raumenų grupę. Apimtis nėra tiesioginis jėgos rodiklis: ji rodo, kiek darbo atlikai, o ne kiek stipresnis tapai.",
+      exercise: {
+        subtitle: "Pasirink pratimą ir pamatyk, ar jame stiprėji.",
+        searchPlaceholder: "Ieškoti pratimo...",
+        noResults: "Pratimų nerasta.",
+        chartTitle: "Maksimalus svoris per treniruotę",
+        chartSubtitle: "Sunkiausias tos dienos setas pasirinktu laikotarpiu.",
+        allTimeNote: "Rekordai skaičiuojami iš visos istorijos, grafikas rodo pasirinktą laikotarpį.",
+        noChartInRange: "Šiuo laikotarpiu šio pratimo duomenų nėra. Pasirink ilgesnį laikotarpį.",
+        viewRecords: "Visi rekordai",
+        statSetVolume: "Geriausios serijos apimtis",
+        setVolumeHint: "svoris × pakartojimai",
+        bestWeightHint: "Sunkiausias setas",
+        bestRepsHint: "Daugiausiai per setą",
+        hardSetsHint: "Atliktos sunkios serijos",
+        sessionsHint: "Treniruotės su šiuo pratimu",
+      },
+      recent: {
+        title: "Naujausi rekordai",
+        subtitle: "Paskutiniai tavo pasiekti rezultatai.",
+        viewAll: "Visi rekordai",
+        none: "Rekordų dar nėra. Jie atsiras, kai atliksi daugiau treniruočių.",
+      },
+      achievementsSubtitle: "Tavo pasiekimai ir artimiausi tikslai.",
+      lastWorkout: "Paskutinė treniruotė",
+      thisWeek: "Šią savaitę",
+    },
     // Word forms used with pluralize() — e.g. pluralize("lt", 3, words.workout)
     words: {
       exercise: ["pratimas", "pratimai"] as WordForms,
@@ -328,6 +420,11 @@ const lt = {
     emptyState: {
       title: "Dar nėra pakankamai duomenų",
       description: "Lyderių lentelė atsiras, kai vartotojai išsaugos treniruotes pasirinktu laikotarpiu.",
+      cta: "Pradėti treniruotę",
+    },
+    info: {
+      title: "Kaip skaičiuojama vieta?",
+      description: "Vertinamas asmeninis progresas, nuoseklumas ir nauji PR, o ne vien pakeltas svoris – todėl varžytis gali ir pradedantieji, ir pažengę.",
     },
     note: "Reitingas remiasi progreso balu: asmeniniu jėgos progresu, nuoseklumu, naujais PR ir aktyvumu. Tai žaidybinis įvertinimas, ne mokslinis.",
   },
@@ -358,12 +455,16 @@ const lt = {
     },
   },
   records: {
-    pageTitle: "Asmeniniai rekordai",
+    pageTitle: "Rekordai",
     pageSubtitle: "Geriausi tavo rezultatai kiekviename pratime.",
     bestWeight: "Geriausias svoris",
     bestReps: "Geriausias pakartojimų skaičius",
     bestSet: "Geriausias setas",
     record: "Rekordas",
+    top: {
+      title: "Sunkiausi svoriai",
+      description: "Trys pratimai su didžiausiu pakeltu svoriu.",
+    },
     noData: "Nėra duomenų",
     units: { kg: "kg", reps: "pakartojimai" },
     emptyState: {
@@ -467,6 +568,8 @@ const en: typeof lt = {
     addExercise: "Add Exercise",
     addSet: "Add set",
     saveWorkout: "Save Workout",
+    saveWorkoutShort: "Save",
+    doneBadge: "Done",
     saveWorkoutPending: "Saving...",
     saved: "Workout saved.",
     emptyStateMessage: "Add exercises and start logging your sets.",
@@ -477,6 +580,23 @@ const en: typeof lt = {
     undoDoneAction: "Undo",
     exerciseMarkedDone: (name: string) => `“${name}” marked as done.`,
     oneHandedHint: "Pick which arm you used for each set.",
+    bodyWeight: {
+      label: "Body weight",
+      placeholder: "e.g. 82",
+      invalid: "Body weight must be between 20 and 300 kg (one decimal place at most).",
+      save: "Save",
+      edit: "Edit",
+      saved: "Body weight saved.",
+      saveFailed: "Couldn't save body weight. Please try again.",
+    },
+    bodyweightExercise: {
+      label: "Use body weight",
+      hint: "KG is the extra weight. 0 kg = bodyweight only.",
+      extraHeader: "+KG",
+      noBodyWeight: "Enter and save your body weight above. KG is the extra weight.",
+      current: (weight: string) => `Body weight: ${weight}`,
+      effectiveLoad: (loads: string) => `Effective load: ${loads}`,
+    },
     oneHandedBadge: "One-handed",
     allExercisesDone: "All exercises done. Add another one or save your workout.",
     weightAria: (setNumber: number) => `Set ${setNumber} weight in kilograms`,
@@ -518,7 +638,16 @@ const en: typeof lt = {
   },
   exercises: {
     pageTitle: "Exercises",
-    pageSubtitle: "Manage your exercises by muscle group.",
+    pageSubtitle: "Manage your exercise library.",
+    count: (n: number) => (n === 1 ? "1 exercise" : `${n} exercises`),
+    filters: {
+      label: "Filter by category",
+      all: "All",
+    },
+    editFor: (name: string) => `Edit “${name}”`,
+    deleteFor: (name: string) => `Delete “${name}”`,
+    or: "or",
+    importHelp: "Load the ready-made CityGym exercise set in one tap.",
     addExercise: "Add Exercise",
     addFirstExercise: "Add First Exercise",
     importCityGymDefaults: "Import CityGym Defaults",
@@ -563,7 +692,7 @@ const en: typeof lt = {
   },
   progress: {
     pageTitle: "Progress",
-    pageSubtitle: "Track your training progress and strength gains.",
+    pageSubtitle: "Track your training progress and consistency.",
     emptyState: {
       title: "No workout data yet",
       description: "Complete your first workout and you'll see your progress here.",
@@ -670,6 +799,64 @@ const en: typeof lt = {
         streak30: "30 Workout Streak",
       },
     },
+    ui: {
+      rangeAria: "Period",
+      rangesShort: { "7": "7D", "30": "30D", "90": "90D", all: "All" },
+      scoreExplain:
+        "Your overall progress rating from 0 to 1000: strength, consistency, records and activity.",
+      scoreOutOf: "out of 1000",
+      allTimeScoreNote:
+        "The Progress Score is calculated for 7, 30 and 90 day periods, so the 90 day score is shown here.",
+      progressExplain: "Strength change compared with your own earlier results.",
+      noScoreCta: "Start Workout",
+      breakdownHint: "A longer bar means you're doing better in that part.",
+      componentHints: {
+        strength: "Whether your weights are going up compared with your own earlier results.",
+        consistency: "How regularly you train.",
+        prProgress: "How many new personal records you set.",
+        activity: "How many workouts and sets you did.",
+      },
+      kpi: {
+        workoutsHint: "Workouts completed",
+        setsHint: "Sets completed",
+        prsHint: "New personal records",
+        streakHint: "Streak of training days",
+        exercisesLabel: "Exercises",
+        exercisesHint: "Different exercises in this period",
+        longest: "Longest",
+      },
+      activity: {
+        subtitle:
+          "Each bar is a workout day and its height is the number of sets you did that day.",
+      },
+      volumeNote:
+        "This is the number of hard sets per muscle group. Volume is not a direct strength measure: it shows how much work you did, not how much stronger you got.",
+      exercise: {
+        subtitle: "Pick an exercise to see whether you're getting stronger in it.",
+        searchPlaceholder: "Search exercises...",
+        noResults: "No exercises found.",
+        chartTitle: "Max weight per workout",
+        chartSubtitle: "Heaviest set of each day in the selected period.",
+        allTimeNote: "Records use your full history, the chart shows the selected period.",
+        noChartInRange: "No data for this exercise in this period. Try a longer period.",
+        viewRecords: "All records",
+        statSetVolume: "Best set volume",
+        setVolumeHint: "weight × reps",
+        bestWeightHint: "Heaviest set",
+        bestRepsHint: "Most in one set",
+        hardSetsHint: "Hard sets completed",
+        sessionsHint: "Workouts with this exercise",
+      },
+      recent: {
+        title: "Latest records",
+        subtitle: "Your most recent personal bests.",
+        viewAll: "All records",
+        none: "No records yet. They'll appear as you complete more workouts.",
+      },
+      achievementsSubtitle: "Your achievements and the next goals.",
+      lastWorkout: "Last workout",
+      thisWeek: "This week",
+    },
     words: {
       exercise: ["exercise", "exercises"] as WordForms,
       workout: ["workout", "workouts"] as WordForms,
@@ -695,6 +882,11 @@ const en: typeof lt = {
     emptyState: {
       title: "Not enough data yet",
       description: "The leaderboard appears once users save workouts in the selected period.",
+      cta: "Start Workout",
+    },
+    info: {
+      title: "How is the rank calculated?",
+      description: "Ranking rewards personal progress, consistency and new PRs, not just the heaviest weight lifted – so beginners and veterans can compete fairly.",
     },
     note: "Ranking uses the Progress Score: personal strength progress, consistency, new PRs and activity. It's a game-style score, not a scientific one.",
   },
@@ -725,12 +917,16 @@ const en: typeof lt = {
     },
   },
   records: {
-    pageTitle: "Personal Records",
+    pageTitle: "Records",
     pageSubtitle: "Your best performances for every exercise.",
     bestWeight: "Best Weight",
     bestReps: "Best Reps",
     bestSet: "Best Set",
     record: "Record",
+    top: {
+      title: "Heaviest lifts",
+      description: "Your three exercises with the highest weight lifted.",
+    },
     noData: "No data",
     units: { kg: "kg", reps: "reps" },
     emptyState: {

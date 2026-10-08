@@ -20,27 +20,32 @@ export function ExerciseProgressChart({ data }: ExerciseProgressChartProps) {
   if (data.length === 0) {
     return (
       <p className="flex h-56 items-center justify-center text-center text-sm text-muted-foreground">
-        {t.progress.exerciseProgress.noExerciseData}
+        {t.progress.ui.exercise.noChartInRange}
       </p>
     );
   }
 
   return (
     <ResponsiveContainer width="100%" height={224}>
-      <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
+      <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
+        <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.6} />
         <XAxis
           dataKey="date"
           tickFormatter={(value: string) => formatShortDate(value, locale)}
           tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
           tickLine={false}
           axisLine={{ stroke: "var(--border)" }}
+          interval="preserveStartEnd"
+          minTickGap={28}
         />
         <YAxis
           tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
           tickLine={false}
           axisLine={false}
           width={40}
+          unit=" kg"
+          domain={[(min: number) => Math.max(0, Math.floor(min - 2)), (max: number) => Math.ceil(max + 2)]}
+          allowDecimals={false}
         />
         <Tooltip
           content={(props) => (

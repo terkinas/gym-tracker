@@ -27,5 +27,8 @@ export type ClientExercise = {
    * WorkoutExercise.completed (immediately if the exercise is already saved,
    * otherwise with the next explicit Save). */
   isDone: boolean;
+  /** Bodyweight exercise: the KG picker is the EXTRA weight on top of the
+   * workout's body weight (0 = bodyweight only). Persisted per exercise. */
+  usesBodyweight: boolean;
   sets: ClientSet[];
 };
