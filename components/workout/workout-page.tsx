@@ -19,7 +19,11 @@ import { RemoveExerciseDialog } from "@/components/workout/remove-exercise-dialo
 import { WorkoutExerciseCard } from "@/components/workout/workout-exercise-card";
 import type { ClientExercise } from "@/components/workout/types";
 import { saveBodyWeightAction } from "@/lib/actions/body-weight";
-import { saveWorkoutAction, setExerciseCompletedAction } from "@/lib/actions/workouts";
+import {
+  clearTodayWorkoutAction,
+  saveWorkoutAction,
+  setExerciseCompletedAction,
+} from "@/lib/actions/workouts";
 import type {
   SaveWorkoutExerciseInput,
   SaveWorkoutSetInput,
@@ -144,8 +148,8 @@ function buildValidatedPayload(
         };
       }
 
-      // One-handed sets must say which arm they were done with, so a set is
-      // never silently assumed to be left/right/both.
+      // Individual-exercise sets must say which side they were done on, so a
+      // set is never silently assumed to be left/right/both.
       if (exercise.isOneHanded && set.hand === null) {
         return {
           ok: false,
@@ -260,11 +264,11 @@ export function WorkoutPage({
       current.map((exercise) => {
         if (exercise.exerciseId !== exerciseId) return exercise;
         // Start from the previous set's values so the user only has to nudge
-        // weight/reps (and the arm, for one-handed exercises) instead of
+        // weight/reps (and the side, for individual exercises) instead of
         // re-entering everything. The FIRST set of an exercise instead starts
         // from the last set of its most recent earlier session (Last Time),
-        // and stays empty when there is no history. The arm is never guessed
-        // from history: one-handed exercises still require choosing it.
+        // and stays empty when there is no history. The side is never guessed
+        // from history: individual exercises still require choosing it.
         const previous = exercise.sets[exercise.sets.length - 1];
         const fromHistory = previous
           ? null
@@ -447,13 +451,37 @@ export function WorkoutPage({
     void persistCompleted(id, false);
   }
 
-  function handleConfirmRemoveExercise(exercise: ClientExercise) {
+  // Removing an exercise only changes the screen until the next Save — EXCEPT
+  // when it was the last one. A workout with nothing left in it must not stay
+  // in the database (it would keep showing up in the history calendar, history
+  // list, progress and records), so removing the last exercise also deletes
+  // today's saved workout on the server straight away. If that fails the
+  // exercise is put back in its place, so the screen never claims the workout
+  // is empty while the database still holds it.
+  async function handleConfirmRemoveExercise(exercise: ClientExercise) {
+    const removedIndex = exercises.findIndex((item) => item.exerciseId === exercise.exerciseId);
+    const removed = removedIndex === -1 ? null : exercises[removedIndex];
+
     setExercises((current) =>
       current.filter((item) => item.exerciseId !== exercise.exerciseId),
     );
     setRemoveTarget(null);
     setActiveExerciseId((current) => (current === exercise.exerciseId ? null : current));
     clearFeedback();
+
+    // Only removing the last exercise leaves the workout blank.
+    if (removed === null || exercises.length !== 1) return;
+
+    try {
+      await clearTodayWorkoutAction();
+    } catch {
+      setExercises((current) =>
+        current.some((item) => item.exerciseId === removed.exerciseId)
+          ? current
+          : [...current.slice(0, removedIndex), removed, ...current.slice(removedIndex)],
+      );
+      setError(t.workout.validation.saveFailed);
+    }
   }
 
   // Parsed view of the input: drives the Save button (enabled only when the
@@ -499,6 +527,13 @@ export function WorkoutPage({
     }
   }
 
+  // The master Save button. Besides saving the whole workout it also finishes
+  // every exercise that is still open and has sets logged, exactly like "I'm
+  // done with this exercise" does: they are flagged completed in the saved
+  // payload and, once the save has succeeded, collapse into the compact row
+  // (which also moves the done counter). An open exercise with no sets yet is
+  // saved as-is but is NOT marked done — there is nothing to finish. On
+  // failure nothing collapses and every exercise stays editable.
   async function handleSave() {
     if (isSaving) return;
     clearFeedback();
@@ -508,7 +543,18 @@ export function WorkoutPage({
       return;
     }
 
-    const result = buildValidatedPayload(exercises, t);
+    const idsToFinish = new Set(
+      exercises
+        .filter((exercise) => !exercise.isDone && exercise.sets.length > 0)
+        .map((exercise) => exercise.exerciseId),
+    );
+
+    const result = buildValidatedPayload(
+      exercises.map((exercise) =>
+        idsToFinish.has(exercise.exerciseId) ? { ...exercise, isDone: true } : exercise,
+      ),
+      t,
+    );
     if (!result.ok) {
       setError(result.message);
       return;
@@ -517,6 +563,18 @@ export function WorkoutPage({
     setIsSaving(true);
     try {
       await saveWorkoutAction(result.payload);
+      if (idsToFinish.size > 0) {
+        // Only flip what was actually part of this save, so an exercise added
+        // or re-opened while the request was in flight is left alone.
+        setExercises((current) =>
+          current.map((exercise) =>
+            idsToFinish.has(exercise.exerciseId) ? { ...exercise, isDone: true } : exercise,
+          ),
+        );
+        setActiveExerciseId((current) =>
+          current !== null && idsToFinish.has(current) ? null : current,
+        );
+      }
       setSuccessMessage(t.workout.saved);
     } catch {
       setError(t.workout.validation.saveFailed);

@@ -174,9 +174,9 @@ export async function setWorkoutExerciseCompleted(
   return result.count > 0;
 }
 
-/** Deletes a user's workout for a given date, if one exists. Provided for
- * completeness alongside the read/write functions above; no UI in this
- * phase triggers a whole-day delete yet. */
+/** Deletes a user's workout for a given date, if one exists. Used by
+ * `clearTodayWorkoutAction` when the last exercise is removed from today's
+ * workout. Cascades to the day's exercises and sets. */
 export async function deleteWorkout(userId: string, date: string): Promise<void> {
   // deleteMany (rather than delete) so calling this for a date with no
   // workout is a harmless no-op instead of throwing, matching the previous

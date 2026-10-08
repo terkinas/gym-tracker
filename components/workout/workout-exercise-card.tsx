@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import {
+  ArrowLeftRight,
   CheckCircle2,
   Circle,
-  Hand,
   MoreVertical,
   PersonStanding,
   Plus,
@@ -158,7 +158,7 @@ export function WorkoutExerciseCard({
               </span>
             )}
             {exercise.isOneHanded && (
-              <StatusBadge icon={Hand}>{t.workout.oneHandedBadge}</StatusBadge>
+              <StatusBadge icon={ArrowLeftRight}>{t.workout.oneHandedBadge}</StatusBadge>
             )}
             {exercise.usesBodyweight && (
               <StatusBadge icon={PersonStanding}>{t.workout.bodyWeight.label}</StatusBadge>

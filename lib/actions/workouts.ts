@@ -7,6 +7,7 @@ import { getTodayDateString } from "@/lib/date";
 import { getExercisesForUser } from "@/lib/storage/exercises";
 import {
   createOrUpdateWorkout,
+  deleteWorkout,
   setWorkoutExerciseCompleted,
 } from "@/lib/storage/workouts";
 import { isSetHand, type SetHand, type Workout, type WorkoutExercise, type WorkoutSet } from "@/lib/types/workout";
@@ -132,6 +133,25 @@ export async function saveWorkoutAction(
   revalidatePath("/treniruote");
 
   return workout;
+}
+
+/** Deletes today's saved workout for the authenticated user. Called when the
+ * user removes the LAST exercise from the workout screen, so a day that has
+ * nothing left in it stops existing in the database — and therefore stops
+ * showing up in the history calendar, the history list and the progress and
+ * records pages. A no-op when nothing is saved for today. As with every other
+ * workout action, the user comes from the session and the date from the
+ * server, so a client can't clear another user's (or another day's) workout. */
+export async function clearTodayWorkoutAction(): Promise<void> {
+  const user = await requireUser();
+
+  await deleteWorkout(user.id, getTodayDateString());
+
+  // Every page that is derived from saved workouts.
+  revalidatePath("/treniruote");
+  revalidatePath("/istorija", "layout");
+  revalidatePath("/progress");
+  revalidatePath("/rekordai");
 }
 
 /** Persists the "I'm done with this exercise" state for today's workout of

@@ -1,4 +1,4 @@
-import { Dumbbell, Hand, Medal, Repeat, Trophy, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Dumbbell, Medal, Repeat, Trophy, type LucideIcon } from "lucide-react";
 
 import { CategoryTile, StatusBadge, categoryMeta } from "@/components/workout/workout-ui";
 import type { Exercise } from "@/lib/exercises";
@@ -91,7 +91,7 @@ export function RecordCard({
               {translateCategory(exercise.category, t)}
             </span>
             {exercise.isOneHanded && (
-              <StatusBadge icon={Hand}>{t.workout.oneHandedBadge}</StatusBadge>
+              <StatusBadge icon={ArrowLeftRight}>{t.workout.oneHandedBadge}</StatusBadge>
             )}
           </div>
         </div>

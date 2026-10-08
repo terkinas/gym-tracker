@@ -3,24 +3,20 @@
 import * as React from "react";
 import { Trash2 } from "lucide-react";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { WeightPicker } from "@/components/workout/weight-picker";
 import { RepsPicker } from "@/components/workout/reps-picker";
 import { DeleteSetDialog } from "@/components/workout/delete-set-dialog";
 import type { ClientSet } from "@/components/workout/types";
 import { useTranslations } from "@/lib/i18n/locale-context";
-import { isSetHand, type SetHand } from "@/lib/types/workout";
+import type { SetHand } from "@/lib/types/workout";
+import { cn } from "@/lib/utils";
+
+/** The two sides an individual (one side at a time) set can be recorded for. */
+const SIDES: readonly SetHand[] = ["left", "right"];
 
 /** Column layout shared by the set rows and the header row above them. The
- * hand column only exists for one-handed exercises, so other exercises keep
- * exactly the previous layout. */
+ * side column only exists for individual (one-sided) exercises, so other
+ * exercises keep exactly the previous layout. */
 export function setGridClass(isOneHanded: boolean): string {
   return isOneHanded
     ? "grid-cols-[1.5rem_minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_2rem_2.25rem] gap-1.5 sm:grid-cols-[2rem_6rem_5rem_7rem_3rem_2.5rem] sm:gap-3"
@@ -32,7 +28,8 @@ interface WorkoutSetRowProps {
   setNumber: number;
   /** First row of the exercise: only subtly emphasised. */
   isFirst?: boolean;
-  /** Shows the left/right control. Never true for ordinary exercises. */
+  /** Individual exercise: shows the left/right side control. Never true for
+   * ordinary exercises. */
   isOneHanded: boolean;
   autoFocus?: boolean;
   onChangeWeight: (value: string) => void;
@@ -105,24 +102,49 @@ export function WorkoutSetRow({
         />
       </div>
 
+      {/* Individual exercises only: both sides are always visible, one tap
+          records which side this set was done on. The outline is accented
+          until a side is chosen, since saving requires one. On a phone the
+          buttons show just the first letter (L / R, K / D); the full word is
+          shown from `sm` up and is always the accessible name. */}
       {isOneHanded && (
-        <Select
-          value={set.hand ?? ""}
-          onValueChange={(value) => {
-            if (isSetHand(value)) onChangeHand(value);
-          }}
+        <div
+          role="group"
+          aria-label={t.workout.handAria(setNumber)}
+          className={cn(
+            "grid h-11 min-w-0 grid-cols-2 gap-0.5 rounded-xl border bg-muted/20 p-0.5",
+            set.hand === null ? "border-primary/40" : "border-border/60",
+          )}
         >
-          <SelectTrigger
-            aria-label={t.workout.handAria(setNumber)}
-            className="h-11 gap-1 rounded-xl px-2 text-xs sm:px-3 sm:text-sm"
-          >
-            <SelectValue placeholder={t.workout.hand.placeholder} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="left">{t.workout.hand.left}</SelectItem>
-            <SelectItem value="right">{t.workout.hand.right}</SelectItem>
-          </SelectContent>
-        </Select>
+          {SIDES.map((side) => {
+            const label = t.workout.hand[side];
+            const isSelected = set.hand === side;
+
+            return (
+              <button
+                key={side}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={label}
+                title={label}
+                onClick={() => onChangeHand(side)}
+                className={cn(
+                  "min-w-0 rounded-lg px-1 text-xs font-medium outline-none transition-[background-color,color,transform] duration-150 focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97] motion-reduce:active:scale-100 sm:text-sm",
+                  isSelected
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span aria-hidden="true" className="sm:hidden">
+                  {label.charAt(0).toUpperCase()}
+                </span>
+                <span aria-hidden="true" className="hidden sm:inline">
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       )}
 
       {/* 44px tap area around the 20px checkbox. */}

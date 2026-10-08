@@ -2,7 +2,7 @@
 // exercise, add sets, and save a workout for a given date — this phase only
 // defines the shape so the data model is settled ahead of time.
 
-/** Arm a set was performed with (one-handed exercises only). */
+/** Side a set was performed on (individual / one-sided exercises only). */
 export type SetHand = "left" | "right";
 
 export function isSetHand(value: unknown): value is SetHand {
@@ -13,7 +13,7 @@ export type WorkoutSet = {
   id: string;
   weight: number;
   reps: number;
-  /** null for non-one-handed exercises and for legacy one-handed sets. */
+  /** null for non-individual exercises and for legacy one-handed sets. */
   hand: SetHand | null;
   /** Counts as a "hard set" (taken close to failure) for weekly volume. */
   isHardSet: boolean;

@@ -206,7 +206,7 @@ export function ExerciseProgress({
             <Stat
               label={ui.statSetVolume}
               hint={ui.setVolumeHint}
-              value={`${formatVolume(progress.bestSetVolume ?? 0, locale)} kg`}
+              value={`${formatVolume(progress.bestSetVolume ?? 0, locale)}`}
             />
             <Stat
               label={t.progress.exerciseProgress.statHardSets}

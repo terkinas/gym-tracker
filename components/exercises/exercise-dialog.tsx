@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Dumbbell, Hand, Plus, Save, X } from "lucide-react";
+import { ArrowLeftRight, Dumbbell, Plus, Save, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -238,7 +238,7 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
           aria-hidden="true"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 text-muted-foreground"
         >
-          <Hand className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
+          <ArrowLeftRight className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span id="exercise-one-handed-label" className="text-sm font-medium text-foreground">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Hand, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Pencil, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { CategoryTile, StatusBadge, categoryMeta } from "@/components/workout/workout-ui";
@@ -57,7 +57,7 @@ export function ExerciseCard({
             {translateCategory(exercise.category, t)}
           </Badge>
           {exercise.isOneHanded && (
-            <StatusBadge icon={Hand}>{t.workout.oneHandedBadge}</StatusBadge>
+            <StatusBadge icon={ArrowLeftRight}>{t.workout.oneHandedBadge}</StatusBadge>
           )}
         </div>
       </div>

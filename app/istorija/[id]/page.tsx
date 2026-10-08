@@ -3,11 +3,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   CalendarDays,
   Check,
   Dumbbell,
   Flame,
-  Hand,
   Layers3,
   PersonStanding,
 } from "lucide-react";
@@ -146,7 +146,7 @@ export default async function WorkoutDetailPage({
                         {translateCategory(exercise.category, t)}
                       </span>
                     )}
-                    {oneHanded && <StatusBadge icon={Hand}>{t.workout.oneHandedBadge}</StatusBadge>}
+                    {oneHanded && <StatusBadge icon={ArrowLeftRight}>{t.workout.oneHandedBadge}</StatusBadge>}
                     {entry.usesBodyweight && (
                       <StatusBadge icon={PersonStanding}>{t.workout.bodyWeight.label}</StatusBadge>
                     )}

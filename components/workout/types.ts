@@ -8,8 +8,9 @@ export type ClientSet = {
   id: string;
   weight: string;
   reps: string;
-  /** Arm used for this set. Only used when the exercise is one-handed;
-   * null = not chosen yet (required before saving). */
+  /** Side (left / right) used for this set. Only used when the exercise is
+   * individual (one side at a time); null = not chosen yet (required before
+   * saving). */
   hand: SetHand | null;
   /** "Hard set" checkbox: counts towards weekly muscle volume. */
   isHardSet: boolean;
@@ -18,9 +19,12 @@ export type ClientSet = {
 export type ClientExercise = {
   exerciseId: string;
   exerciseName: string;
-  /** Each set records which arm it was performed with. */
+  /** Individual exercise (arm, leg, shoulder…): each set records which side it
+   * was performed on. Stored as `Exercise.isOneHanded` (column name unchanged). */
   isOneHanded: boolean;
-  /** The user tapped "I'm done with this exercise". The exercise stays
+  /** The user tapped "I'm done with this exercise" (or saved the whole
+   * workout with the master Save button while this exercise was open and had
+   * sets logged). The exercise stays
    * in state (sets kept, still saved, picker doesn't offer it again) but is
    * rendered as a compact row (title + Undo) instead of the full card.
    * Persisted as
