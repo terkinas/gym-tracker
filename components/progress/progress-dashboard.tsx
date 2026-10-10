@@ -11,6 +11,7 @@ import { ExerciseProgress } from "@/components/progress/exercise-progress";
 import { OverallProgress } from "@/components/progress/overall-progress";
 import { ProgressSummary } from "@/components/progress/progress-summary";
 import { RecentRecords } from "@/components/progress/recent-records";
+import { SectionHeading, ToneTile, type Tone } from "@/components/progress/section-heading";
 import { TimeRangeSelect } from "@/components/progress/time-range-select";
 import { TrainingActivityChart } from "@/components/progress/training-activity-chart";
 import { WeeklyVolume } from "@/components/progress/weekly-volume";
@@ -24,13 +25,13 @@ import {
 } from "@/lib/progress/analytics";
 import type { ProgressOverview, ScorePeriod, TimeRange } from "@/lib/progress/analytics";
 import type { Exercise } from "@/lib/exercises";
-import type { Workout } from "@/lib/types/workout";
+import type { AnalyticsWorkout } from "@/lib/types/workout";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
 import { formatCount, formatDate, pluralize } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/translations";
 
 interface ProgressDashboardProps {
-  workouts: Workout[];
+  workouts: AnalyticsWorkout[];
   exercises: Exercise[];
   /** Score, streaks and achievements, computed server-side with the same
    * functions the leaderboard uses. */
@@ -40,7 +41,7 @@ interface ProgressDashboardProps {
 /** Default exercise for the exercise-progress picker: whichever the user
  * has actually logged the most, so the section shows real data on first
  * load instead of an arbitrary, possibly-never-used exercise. */
-function pickDefaultExerciseId(workouts: Workout[], exercises: Exercise[]): string | null {
+function pickDefaultExerciseId(workouts: AnalyticsWorkout[], exercises: Exercise[]): string | null {
   if (exercises.length === 0) return null;
 
   let bestId = exercises[0].id;
@@ -105,7 +106,7 @@ export function ProgressDashboard({ workouts, exercises, overview }: ProgressDas
   }, [workouts, range, summary, overview]);
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8">
+    <div className="flex flex-col gap-8 sm:gap-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
           <p className="flex items-center gap-1.5 text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -152,6 +153,7 @@ export function ProgressDashboard({ workouts, exercises, overview }: ProgressDas
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <ChartCard
               icon={CalendarDays}
+              tone="green"
               title={t.progress.charts.trainingActivityTitle}
               subtitle={t.progress.ui.activity.subtitle}
             >
@@ -160,6 +162,7 @@ export function ProgressDashboard({ workouts, exercises, overview }: ProgressDas
 
             <ChartCard
               icon={BarChart3}
+              tone="violet"
               title={t.progress.weeklyVolume.title}
               subtitle={t.progress.weeklyVolume.subtitle}
             >
@@ -178,10 +181,12 @@ export function ProgressDashboard({ workouts, exercises, overview }: ProgressDas
           )}
 
           <section className="flex flex-col gap-3" aria-labelledby="categories-title">
-            <h2 id="categories-title" className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
-              <Layers3 className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} aria-hidden="true" />
-              {t.progress.categoriesSection.title}
-            </h2>
+            <SectionHeading
+              id="categories-title"
+              icon={Layers3}
+              tone="blue"
+              title={t.progress.categoriesSection.title}
+            />
             <CategoryProgressList categories={categories} />
           </section>
 
@@ -193,25 +198,22 @@ export function ProgressDashboard({ workouts, exercises, overview }: ProgressDas
 }
 
 function ChartCard({
-  icon: Icon,
+  icon,
+  tone,
   title,
   subtitle,
   children,
 }: {
   icon: LucideIcon;
+  tone: Tone;
   title: string;
   subtitle: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex min-w-0 flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <section className="flex min-w-0 flex-col gap-4 rounded-none border border-border bg-surface p-4 sm:p-5">
       <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 text-muted-foreground"
-        >
-          <Icon className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
-        </span>
+        <ToneTile icon={icon} tone={tone} className="h-10 w-10" />
         <div className="flex min-w-0 flex-col gap-0.5">
           <h2 className="text-base font-semibold tracking-tight text-foreground">{title}</h2>
           <p className="text-xs leading-relaxed text-muted-foreground">{subtitle}</p>
@@ -224,10 +226,10 @@ function ChartCard({
 
 function EmptyState({ t }: { t: Dictionary }) {
   return (
-    <div className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-border px-5 py-16 text-center">
+    <div className="flex flex-col items-center gap-5 rounded-none border border-dashed border-border px-5 py-16 text-center">
       <span
         aria-hidden="true"
-        className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted/30 text-muted-foreground"
+        className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
       >
         <TrendingUp className="h-6 w-6" strokeWidth={1.5} />
       </span>
@@ -241,7 +243,7 @@ function EmptyState({ t }: { t: Dictionary }) {
       </div>
       <Link
         href="/treniruote"
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Dumbbell className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         {t.progress.emptyState.cta}

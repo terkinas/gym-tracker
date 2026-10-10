@@ -32,8 +32,14 @@ function isValidUsername(username: string): boolean {
   );
 }
 
-async function startSession(userId: string) {
-  const token = await encryptSession({ userId });
+async function startSession(user: { id: string; name: string; username: string }) {
+  // name/username are embedded so later requests can authenticate from the
+  // signed cookie alone (no per-request user lookup).
+  const token = await encryptSession({
+    userId: user.id,
+    name: user.name,
+    username: user.username,
+  });
   const cookieStore = await cookies();
 
   // Same name + attributes as the logout/clear options, so this always
@@ -73,17 +79,16 @@ export async function registerAction(
 
   const passwordHash = await bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
 
-  let userId: string;
+  let createdUser: { id: string; name: string; username: string };
   try {
-    const user = await createUser({ name, username, passwordHash });
-    userId = user.id;
+    createdUser = await createUser({ name, username, passwordHash });
   } catch {
     // Covers the race where two requests register the same username at
     // once — createUser re-checks and throws USERNAME_TAKEN.
     return { error: "USERNAME_TAKEN" };
   }
 
-  await startSession(userId);
+  await startSession(createdUser);
   redirect("/");
 }
 
@@ -105,7 +110,7 @@ export async function loginAction(
     return { error: result.message };
   }
 
-  await startSession(result.user.id);
+  await startSession(result.user);
   redirect("/treniruote");
 }
 

@@ -43,6 +43,24 @@ export async function getExercisesForUser(userId: string): Promise<Exercise[]> {
   return rows.map(toExercise);
 }
 
+/** Which of `exerciseIds` belong to `userId`, with the one flag the workout
+ * save needs. A narrow read (only the requested ids, two columns) for
+ * validating a save without loading the user's whole exercise list. Ids that
+ * don't exist or belong to someone else are simply absent from the map.
+ * `userId` must come from the authenticated session. */
+export async function getOwnedExerciseFlags(
+  userId: string,
+  exerciseIds: string[],
+): Promise<Map<string, { isOneHanded: boolean }>> {
+  if (exerciseIds.length === 0) return new Map();
+
+  const rows = await db.exercise.findMany({
+    where: { userId, id: { in: exerciseIds } },
+    select: { id: true, isOneHanded: true },
+  });
+  return new Map(rows.map((row) => [row.id, { isOneHanded: row.isOneHanded }]));
+}
+
 export async function createExercise(
   userId: string,
   data: ExerciseInput,

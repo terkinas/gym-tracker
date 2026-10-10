@@ -4,15 +4,17 @@ import * as React from "react";
 import Link from "next/link";
 import { ChevronRight, Trophy } from "lucide-react";
 
-import { CategoryTile } from "@/components/workout/workout-ui";
+import { SectionHeading } from "@/components/progress/section-heading";
+import { CategoryTile, categoryMeta } from "@/components/workout/workout-ui";
+import { cn } from "@/lib/utils";
 import { calculatePersonalRecords } from "@/lib/progress/analytics";
 import type { Exercise } from "@/lib/exercises";
-import type { Workout } from "@/lib/types/workout";
+import type { AnalyticsWorkout } from "@/lib/types/workout";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
 import { formatCount, formatDate } from "@/lib/i18n/format";
 
 interface RecentRecordsProps {
-  workouts: Workout[];
+  workouts: AnalyticsWorkout[];
   exercises: Exercise[];
 }
 
@@ -66,25 +68,25 @@ export function RecentRecords({ workouts, exercises }: RecentRecordsProps) {
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="recent-records-title">
-      <div className="flex items-end justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h2 id="recent-records-title" className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
-            <Trophy className="h-4 w-4 text-primary" strokeWidth={1.75} aria-hidden="true" />
-            {ui.title}
-          </h2>
-          <p className="text-xs text-muted-foreground">{ui.subtitle}</p>
-        </div>
+      <SectionHeading
+        id="recent-records-title"
+        icon={Trophy}
+        tone="amber"
+        title={ui.title}
+        subtitle={ui.subtitle}
+        action={
         <Link
           href="/rekordai"
-          className="inline-flex h-11 shrink-0 items-center gap-1 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex h-11 shrink-0 items-center gap-1 rounded-none px-3 text-sm font-medium text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           {ui.viewAll}
           <ChevronRight className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         </Link>
-      </div>
+        }
+      />
 
       {items.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-none border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
           {ui.none}
         </p>
       ) : (
@@ -92,12 +94,19 @@ export function RecentRecords({ workouts, exercises }: RecentRecordsProps) {
           {items.map((item) => (
             <li
               key={item.exercise.id}
-              className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200"
+              className={cn(
+                "relative flex min-w-0 items-center gap-3.5 overflow-hidden rounded-none border border-border bg-surface bg-gradient-to-r from-transparent to-transparent py-4 pr-4 pl-5 transition-[background-color,border-color] duration-200 hover:border-foreground/20 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200",
+                categoryMeta(item.exercise.category).wash,
+              )}
             >
-              <CategoryTile category={item.exercise.category} />
+              <span
+                aria-hidden="true"
+                className={cn("absolute inset-y-0 left-0 w-1", categoryMeta(item.exercise.category).bar)}
+              />
+              <CategoryTile category={item.exercise.category} className="h-12 w-12" />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate text-sm font-semibold text-foreground">{item.exercise.name}</span>
-                <span className="text-sm font-medium text-primary tabular-nums">{item.result}</span>
+                <span className="text-lg leading-tight font-bold text-foreground tabular-nums">{item.result}</span>
                 <span className="text-xs text-muted-foreground">
                   {item.label} · {formatDate(item.date, locale)}
                 </span>

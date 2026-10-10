@@ -52,6 +52,16 @@ export async function getUserById(id: string): Promise<User | null> {
   return user ? toUser(user) : null;
 }
 
+/** id/name/username only (never `passwordHash`) — what the session needs. */
+export async function getUserProfileById(
+  id: string,
+): Promise<{ id: string; name: string; username: string } | null> {
+  return db.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, username: true },
+  });
+}
+
 /** Cheap primary-key existence check (no passwordHash fetched). */
 export async function userExists(id: string): Promise<boolean> {
   const user = await db.user.findUnique({ where: { id }, select: { id: true } });
@@ -93,6 +103,16 @@ export async function createUser(data: {
 export async function getUserBodyWeight(userId: string): Promise<number | null> {
   const row = await db.user.findUnique({ where: { id: userId }, select: { bodyWeight: true } });
   return row?.bodyWeight ?? null;
+}
+
+/** Like `getUserBodyWeight`, but distinguishes "user row no longer exists"
+ * (`null`) from "user exists without a saved body weight"
+ * (`{ bodyWeight: null }`). Lets a page use this one read as both its data
+ * fetch and its still-exists check. */
+export async function getUserBodyWeightRecord(
+  userId: string,
+): Promise<{ bodyWeight: number | null } | null> {
+  return db.user.findUnique({ where: { id: userId }, select: { bodyWeight: true } });
 }
 
 /** Stores (or clears, with null) the user's current body weight. */

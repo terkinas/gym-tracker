@@ -22,9 +22,9 @@ function Switch({
       data-state={checked ? "checked" : "unchecked"}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        "inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent transition-colors outline-none",
+        "inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-none border border-transparent transition-colors outline-none",
         "focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-        checked ? "bg-primary" : "bg-input",
+        checked ? "bg-gradient-to-r from-emerald-400 to-cyan-400" : "bg-input",
         className,
       )}
       {...props}
@@ -32,7 +32,7 @@ function Switch({
       <span
         aria-hidden="true"
         className={cn(
-          "pointer-events-none block h-4 w-4 rounded-full bg-background shadow transition-transform",
+          "pointer-events-none block h-4 w-4 rounded-none bg-background shadow transition-transform",
           checked ? "translate-x-[1.125rem]" : "translate-x-0.5",
         )}
       />

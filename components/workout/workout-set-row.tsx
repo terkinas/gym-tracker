@@ -19,8 +19,8 @@ const SIDES: readonly SetHand[] = ["left", "right"];
  * exercises keep exactly the previous layout. */
 export function setGridClass(isOneHanded: boolean): string {
   return isOneHanded
-    ? "grid-cols-[1.5rem_minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_2rem_2.25rem] gap-1.5 sm:grid-cols-[2rem_6rem_5rem_7rem_3rem_2.5rem] sm:gap-3"
-    : "grid-cols-[1.5rem_minmax(0,1.3fr)_minmax(0,1fr)_2rem_2.25rem] gap-2 sm:grid-cols-[2rem_6rem_5rem_3rem_2.5rem] sm:gap-3";
+    ? "grid-cols-[1.5rem_minmax(0,1.05fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_2.25rem] gap-1.5 sm:grid-cols-[2rem_6rem_5rem_7rem_2.5rem] sm:gap-3"
+    : "grid-cols-[1.5rem_minmax(0,1.3fr)_minmax(0,1fr)_2.25rem] gap-2 sm:grid-cols-[2rem_6rem_5rem_2.5rem] sm:gap-3";
 }
 
 interface WorkoutSetRowProps {
@@ -69,17 +69,18 @@ export function WorkoutSetRow({
 
   // Wheel wrapper: a barely-there ring while a wheel is being used.
   const pickerWrapClass =
-    "min-w-0 rounded-xl transition-shadow duration-150 focus-within:ring-1 focus-within:ring-primary/30";
+    "min-w-0 rounded-none transition-shadow duration-150 focus-within:ring-1 focus-within:ring-primary/30";
 
   return (
     <div
       ref={rowRef}
-      className={`grid items-center ${setGridClass(isOneHanded)} ${
+      className={`flex flex-col gap-1 ${
         isFirst ? "" : "border-t border-border/40 pt-2"
       } ${autoFocus ? "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-200" : ""}`}
     >
+      <div className={`grid items-center ${setGridClass(isOneHanded)}`}>
       <span
-        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium tabular-nums ${
+        className={`flex h-6 w-6 items-center justify-center rounded-none text-xs font-medium tabular-nums ${
           isFirst ? "bg-foreground/10 text-foreground" : "bg-muted/60 text-muted-foreground"
         }`}
       >
@@ -112,7 +113,7 @@ export function WorkoutSetRow({
           role="group"
           aria-label={t.workout.handAria(setNumber)}
           className={cn(
-            "grid h-11 min-w-0 grid-cols-2 gap-0.5 rounded-xl border bg-muted/20 p-0.5",
+            "grid h-11 min-w-0 grid-cols-2 gap-0.5 rounded-none border bg-muted/20 p-0.5",
             set.hand === null ? "border-primary/40" : "border-border/60",
           )}
         >
@@ -129,7 +130,7 @@ export function WorkoutSetRow({
                 title={label}
                 onClick={() => onChangeHand(side)}
                 className={cn(
-                  "min-w-0 rounded-lg px-1 text-xs font-medium outline-none transition-[background-color,color,transform] duration-150 focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97] motion-reduce:active:scale-100 sm:text-sm",
+                  "min-w-0 rounded-none px-1 text-xs font-medium outline-none transition-[background-color,color,transform] duration-150 focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97] motion-reduce:active:scale-100 sm:text-sm",
                   isSelected
                     ? "bg-primary/15 text-primary"
                     : "text-muted-foreground hover:text-foreground",
@@ -147,25 +148,49 @@ export function WorkoutSetRow({
         </div>
       )}
 
-      {/* 44px tap area around the 20px checkbox. */}
-      <label className="mx-auto flex h-11 w-11 cursor-pointer items-center justify-center justify-self-center">
-        <input
-          type="checkbox"
-          checked={set.isHardSet}
-          onChange={(event) => onChangeHardSet(event.target.checked)}
-          aria-label={t.workout.hardSetAria(setNumber)}
-          className="h-5 w-5 cursor-pointer rounded border-input accent-primary transition-transform duration-150 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
-      </label>
-
       <button
         type="button"
         onClick={() => setConfirmingDelete(true)}
         aria-label={t.workout.deleteSetAria(setNumber)}
-        className="flex h-11 w-11 items-center justify-center justify-self-center rounded-xl text-muted-foreground transition-[color,background-color,transform] duration-150 hover:bg-destructive/10 hover:text-destructive active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-11 w-11 items-center justify-center justify-self-center rounded-none text-muted-foreground transition-[color,background-color,transform] duration-150 hover:bg-destructive/10 hover:text-destructive active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Trash2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
       </button>
+      </div>
+
+      {/* Effort gets its own row under the set. The label is plain text
+          (blends into the background, not tappable); only the dark switch on
+          the right toggles it. Off = low effort (default). */}
+      <div className="ml-8 flex min-h-11 items-center justify-between gap-3 text-sm font-medium text-muted-foreground sm:ml-11">
+        <span>{t.workout.hardSetLabel}</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={set.isHardSet}
+          aria-label={t.workout.hardSetAria(setNumber)}
+          onClick={() => onChangeHardSet(!set.isHardSet)}
+          className="flex h-11 w-14 shrink-0 cursor-pointer items-center justify-center rounded-none outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "inline-flex h-6 w-11 items-center rounded-none border transition-colors",
+              set.isHardSet
+                ? "border-primary/60 bg-zinc-950"
+                : "border-zinc-700 bg-zinc-900",
+            )}
+          >
+            <span
+              className={cn(
+                "block h-4 w-4 rounded-none shadow transition-[transform,background-color]",
+                set.isHardSet
+                  ? "translate-x-[1.5rem] bg-gradient-to-br from-emerald-400 to-cyan-400"
+                  : "translate-x-1 bg-zinc-500",
+              )}
+            />
+          </span>
+        </button>
+      </div>
 
       <DeleteSetDialog
         open={confirmingDelete}

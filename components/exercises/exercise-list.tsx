@@ -162,7 +162,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
 
         <Button
           onClick={() => setDialogState({ mode: "add" })}
-          className="h-11 shrink-0 rounded-xl px-4 transition-transform duration-150 active:scale-[0.98] motion-reduce:active:scale-100 sm:px-5"
+          className="h-11 shrink-0 rounded-none px-4 transition-transform duration-150 active:scale-[0.98] motion-reduce:active:scale-100 sm:px-5"
         >
           <Plus className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
           {t.exercises.addExercise}
@@ -172,7 +172,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
       {error && (
         <p
           role="alert"
-          className="flex items-center gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200"
+          className="flex items-center gap-2.5 rounded-none border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200"
         >
           <AlertCircle className="h-4 w-4 shrink-0 text-destructive" strokeWidth={1.75} />
           {error}
@@ -183,7 +183,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
         <p
           role="status"
           aria-live="polite"
-          className="flex items-center gap-2.5 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-200"
+          className="flex items-center gap-2.5 rounded-none border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-200"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.75} />
           {successMessage}
@@ -198,43 +198,47 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
           </div>
 
           {isSearching && !hasSearchResults ? (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-4 py-12 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-none border border-dashed border-border px-4 py-12 text-center">
               <span
                 aria-hidden="true"
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-muted/30 text-muted-foreground"
+                className="flex h-11 w-11 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
               >
                 <SearchX className="h-5 w-5" strokeWidth={1.5} />
               </span>
               <p className="text-sm text-muted-foreground">{t.exercises.noSearchResults}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-7">
+            <div className="flex flex-col gap-9">
               {visibleCategories.map((category) => {
                 const categoryExercises = filteredExercises.filter(
                   (exercise) => exercise.category === category,
                 );
-                const { icon: CategoryIcon, tile } = categoryMeta(category);
+                const { icon: CategoryIcon, tile, line } = categoryMeta(category);
 
                 return (
-                  <section key={category} className="flex flex-col gap-3">
-                    <h2 className="flex items-center gap-2.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                  <section key={category} className="flex flex-col gap-3.5">
+                    <h2 className="flex items-center gap-3 text-lg font-semibold tracking-tight text-foreground">
                       <span
                         aria-hidden="true"
                         className={cn(
-                          "flex h-7 w-7 items-center justify-center rounded-lg border",
+                          "flex h-9 w-9 items-center justify-center rounded-none border",
                           tile,
                         )}
                       >
-                        <CategoryIcon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                        <CategoryIcon className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
                       </span>
                       {translateCategory(category, t)}
-                      <span className="rounded-full border border-border/60 bg-muted/30 px-2 py-0.5 text-[0.7rem] leading-4 font-medium tracking-normal text-muted-foreground normal-case tabular-nums">
+                      <span className="rounded-none border border-border/60 bg-muted/30 px-2 py-0.5 text-xs leading-4 font-medium text-muted-foreground tabular-nums">
                         {categoryExercises.length}
                       </span>
+                      <span
+                        aria-hidden="true"
+                        className={cn("h-px flex-1 bg-gradient-to-r to-transparent", line)}
+                      />
                     </h2>
 
                     {categoryExercises.length > 0 ? (
-                      <div className="flex flex-col gap-2.5">
+                      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
                         {categoryExercises.map((exercise) => (
                           <ExerciseCard
                             key={exercise.id}
@@ -249,7 +253,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
                         ))}
                       </div>
                     ) : (
-                      <p className="rounded-xl border border-dashed border-border px-4 py-3.5 text-sm text-muted-foreground">
+                      <p className="rounded-none border border-dashed border-border px-4 py-3.5 text-sm text-muted-foreground">
                         {t.exercises.categoryEmpty}
                       </p>
                     )}
@@ -260,10 +264,10 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
           )}
         </>
       ) : (
-        <div className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-border px-4 py-14 text-center">
+        <div className="flex flex-col items-center gap-5 rounded-none border border-dashed border-border px-4 py-14 text-center">
           <span
             aria-hidden="true"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted/30 text-muted-foreground"
+            className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
           >
             <Dumbbell className="h-6 w-6" strokeWidth={1.5} />
           </span>
@@ -272,7 +276,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
           <div className="flex w-full max-w-xs flex-col items-stretch gap-4">
             <Button
               onClick={() => setDialogState({ mode: "add" })}
-              className="h-12 rounded-xl transition-transform duration-150 active:scale-[0.98] motion-reduce:active:scale-100"
+              className="h-12 rounded-none transition-transform duration-150 active:scale-[0.98] motion-reduce:active:scale-100"
             >
               <Plus className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
               {t.exercises.addFirstExercise}
@@ -291,7 +295,7 @@ export function ExerciseList({ initialExercises }: ExerciseListProps) {
                 variant="outline"
                 onClick={handleImportCityGymDefaults}
                 loading={isImporting}
-                className="h-12 rounded-xl transition-transform duration-150 active:scale-[0.98] motion-reduce:active:scale-100"
+                className="h-12 rounded-none transition-transform duration-150 active:scale-[0.98] motion-reduce:active:scale-100"
               >
                 {!isImporting && <LibraryBig className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />}
                 {isImporting

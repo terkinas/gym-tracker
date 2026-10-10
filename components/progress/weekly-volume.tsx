@@ -12,10 +12,10 @@ import { getTodayDateString } from "@/lib/date";
 import { addDaysToDateString, startOfWeek } from "@/lib/progress/analytics";
 import { getWeeklyMuscleVolume } from "@/lib/progress/volume";
 import type { Exercise } from "@/lib/exercises";
-import type { Workout } from "@/lib/types/workout";
+import type { AnalyticsWorkout } from "@/lib/types/workout";
 
 interface WeeklyVolumeProps {
-  workouts: Workout[];
+  workouts: AnalyticsWorkout[];
   exercises: Exercise[];
 }
 
@@ -45,7 +45,7 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
           type="button"
           onClick={() => setWeekStart(addDaysToDateString(weekStart, -7))}
           aria-label={w.previousWeek}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-11 w-11 items-center justify-center rounded-none border border-border text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
         </button>
@@ -58,7 +58,7 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
           onClick={() => setWeekStart(addDaysToDateString(weekStart, 7))}
           disabled={isCurrentWeek}
           aria-label={w.nextWeek}
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
+          className="flex h-11 w-11 items-center justify-center rounded-none border border-border text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
         >
           <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
         </button>
@@ -82,9 +82,9 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
                   : w.directOnly(row.direct)}
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-2 w-full overflow-hidden rounded-none bg-muted">
               <div
-                className={`h-full rounded-full motion-safe:transition-[width] motion-safe:duration-200 ${categoryMeta(row.muscle).bar}`}
+                className={`h-full rounded-none motion-safe:transition-[width] motion-safe:duration-200 ${categoryMeta(row.muscle).bar}`}
                 style={{ width: `${(row.direct / maxDirect) * 100}%` }}
               />
             </div>
@@ -99,7 +99,7 @@ export function WeeklyVolume({ workouts, exercises }: WeeklyVolumeProps) {
       {totalDirect === 0 && <p className="text-xs text-muted-foreground">{w.noSets}</p>}
       {showIndirect && <p className="text-xs text-muted-foreground">{w.indirectNote}</p>}
 
-      <p className="flex items-start gap-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+      <p className="flex items-start gap-2 rounded-none border border-border/60 bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
         <span>{t.progress.ui.volumeNote}</span>
       </p>

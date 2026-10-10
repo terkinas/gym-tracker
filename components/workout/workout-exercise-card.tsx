@@ -121,7 +121,7 @@ export function WorkoutExerciseCard({
     <Card
       ref={cardRef}
       className={cn(
-        "relative gap-4 overflow-hidden rounded-2xl p-4 pl-5 shadow-none transition-colors duration-200 sm:p-5 sm:pl-6",
+        "relative gap-4 overflow-hidden rounded-none p-4 pl-5 shadow-none transition-colors duration-200 sm:p-5 sm:pl-6",
         isActive && "border-primary/30",
         isFreshlyActive &&
           "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-2 motion-safe:duration-200",
@@ -141,7 +141,7 @@ export function WorkoutExerciseCard({
               {exercise.exerciseName}
             </h3>
             {isActive && (
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.65rem] leading-none font-semibold tracking-wider text-primary uppercase motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-200">
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-none border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.65rem] leading-none font-semibold tracking-wider text-primary uppercase motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-200">
                 <Circle
                   className="h-2 w-2 animate-pulse fill-current motion-reduce:animate-none"
                   aria-hidden="true"
@@ -171,7 +171,7 @@ export function WorkoutExerciseCard({
             <button
               type="button"
               aria-label={t.common.actionsFor(exercise.exerciseName)}
-              className="-mt-1.5 -mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-accent/70"
+              className="-mt-1.5 -mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-none text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-accent/70"
             >
               <MoreVertical className="h-4 w-4" strokeWidth={1.75} />
             </button>
@@ -209,7 +209,7 @@ export function WorkoutExerciseCard({
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5 rounded-xl border border-border/50 bg-muted/20 px-3 py-1">
+      <div className="flex flex-col gap-1.5 rounded-none border border-border/50 bg-muted/20 px-3 py-1">
         <div className="flex min-h-11 items-center justify-between gap-3">
           <label
             htmlFor={`bodyweight-${exercise.exerciseId}`}
@@ -258,7 +258,6 @@ export function WorkoutExerciseCard({
             {exercise.isOneHanded && (
               <span className={cn(HEADER_CELL, "text-center")}>{t.workout.hand.label}</span>
             )}
-            <span className={cn(HEADER_CELL, "text-center")}>{t.workout.setsHeader.hard}</span>
             <span aria-hidden="true" />
           </div>
         )}
@@ -288,7 +287,7 @@ export function WorkoutExerciseCard({
             />
           ))
         ) : (
-          <p className="rounded-xl border border-dashed border-border px-3 py-3 text-sm text-muted-foreground">
+          <p className="rounded-none border border-dashed border-border px-3 py-3 text-sm text-muted-foreground">
             {t.workout.noSetsYet}
           </p>
         )}
@@ -300,7 +299,7 @@ export function WorkoutExerciseCard({
           type="button"
           variant="outline"
           onClick={onAddSet}
-          className="h-12 w-full rounded-xl border-dashed text-sm transition-[transform,background-color,border-color] duration-150 active:scale-[0.98] sm:h-11 sm:w-auto"
+          className="h-12 w-full rounded-none border-dashed text-sm transition-[transform,background-color,border-color] duration-150 active:scale-[0.98] sm:h-11 sm:w-auto"
         >
           <Plus className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
           {t.workout.addSet}
@@ -313,7 +312,7 @@ export function WorkoutExerciseCard({
           onClick={onDone}
           loading={isSavingDone}
           disabled={disabled}
-          className="h-12 w-full rounded-xl border border-primary/30 bg-primary/10 text-sm text-primary transition-[transform,background-color,border-color] duration-150 hover:border-primary/40 hover:bg-primary/15 hover:text-primary active:scale-[0.98] sm:h-11 sm:w-auto"
+          className="h-12 w-full rounded-none border border-primary/30 bg-primary/10 text-sm text-primary transition-[transform,background-color,border-color] duration-150 hover:border-primary/40 hover:bg-primary/15 hover:text-primary active:scale-[0.98] sm:h-11 sm:w-auto"
         >
           {!isSavingDone && <CheckCircle2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={2} />}
           {t.workout.doneWithExercise}

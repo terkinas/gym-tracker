@@ -8,7 +8,7 @@
 import { EXERCISE_CATEGORIES } from "@/lib/exercises";
 import type { Exercise, ExerciseCategory } from "@/lib/exercises";
 import { getTodayDateString } from "@/lib/date";
-import type { Workout } from "@/lib/types/workout";
+import type { AnalyticsWorkout } from "@/lib/types/workout";
 
 export type TimeRange = "7" | "30" | "90" | "all";
 
@@ -53,7 +53,7 @@ export function setVolume(weight: number, reps: number): number {
   return weight * reps;
 }
 
-export function workoutHardSetCount(workout: Workout): number {
+export function workoutHardSetCount(workout: AnalyticsWorkout): number {
   let total = 0;
   for (const exercise of workout.exercises) {
     for (const set of exercise.sets) {
@@ -63,11 +63,11 @@ export function workoutHardSetCount(workout: Workout): number {
   return total;
 }
 
-export function workoutSetCount(workout: Workout): number {
+export function workoutSetCount(workout: AnalyticsWorkout): number {
   return workout.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
 }
 
-function sortByDateAsc(workouts: Workout[]): Workout[] {
+function sortByDateAsc(workouts: AnalyticsWorkout[]): AnalyticsWorkout[] {
   return [...workouts].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }
 
@@ -98,7 +98,7 @@ const RANGE_DAYS: Record<Exclude<TimeRange, "all">, number> = {
 
 /** Keeps only workouts within the selected trailing window ending today.
  * `range: "all"` returns every workout untouched. */
-export function filterWorkoutsByRange(workouts: Workout[], range: TimeRange): Workout[] {
+export function filterWorkoutsByRange(workouts: AnalyticsWorkout[], range: TimeRange): AnalyticsWorkout[] {
   if (range === "all") return workouts;
   const cutoff = addDaysToDateString(getTodayDateString(), -(RANGE_DAYS[range] - 1));
   return workouts.filter((workout) => workout.date >= cutoff);
@@ -108,7 +108,7 @@ export function filterWorkoutsByRange(workouts: Workout[], range: TimeRange): Wo
  * range, since "how many workouts have I ever logged" shouldn't change when
  * someone switches the chart window. */
 export function getProgressSummary(
-  workouts: Workout[],
+  workouts: AnalyticsWorkout[],
   exercises: Exercise[],
 ): ProgressSummary {
   const sorted = sortByDateAsc(workouts);
@@ -132,7 +132,7 @@ export function getProgressSummary(
  * day. A user can only ever log one workout per date, so a plain workout
  * count would just be a flat line of 1s — sets performed is the honest,
  * still-real measure of that day's training activity. */
-export function getTrainingActivity(workouts: Workout[], range: TimeRange): DailyPoint[] {
+export function getTrainingActivity(workouts: AnalyticsWorkout[], range: TimeRange): DailyPoint[] {
   const filtered = filterWorkoutsByRange(workouts, range);
   return sortByDateAsc(filtered).map((workout) => ({
     date: workout.date,
@@ -146,7 +146,7 @@ export function getTrainingActivity(workouts: Workout[], range: TimeRange): Dail
  * exercise list, not something that changes as training history is
  * filtered. */
 export function getCategoryProgress(
-  workouts: Workout[],
+  workouts: AnalyticsWorkout[],
   exercises: Exercise[],
   range: TimeRange,
 ): CategoryProgress[] {
@@ -199,7 +199,7 @@ export function getCategoryProgress(
 /** Stats and history for a single exercise, always across the user's full
  * workout history — "best weight ever recorded" shouldn't reset just
  * because the dashboard's chart range is set to 7 days. */
-export function getExerciseProgress(workouts: Workout[], exerciseId: string): ExerciseProgress {
+export function getExerciseProgress(workouts: AnalyticsWorkout[], exerciseId: string): ExerciseProgress {
   const sorted = sortByDateAsc(workouts);
 
   let sessions = 0;
@@ -266,7 +266,7 @@ export type PersonalRecord = {
  * Records are keyed by `exerciseId` and returned in first-seen order; the
  * caller decides which exercises to show (e.g. only ones that still exist).
  * Volume uses the shared `setVolume` helper. */
-export function calculatePersonalRecords(workouts: Workout[]): Map<string, PersonalRecord> {
+export function calculatePersonalRecords(workouts: AnalyticsWorkout[]): Map<string, PersonalRecord> {
   const records = new Map<string, PersonalRecord>();
 
   for (const workout of sortByDateAsc(workouts)) {
@@ -318,7 +318,8 @@ export function calculatePersonalRecords(workouts: Workout[]): Map<string, Perso
 // medical or scientific fitness rating, and it never compares absolute kg
 // between users: strength is measured against the user's OWN earlier results.
 
-/** Minimal workout shape the scoring functions need. A full `Workout` fits. */
+/** Minimal workout shape the scoring functions need. A full `Workout` (or an
+ * `AnalyticsWorkout`) fits. */
 export type ScoreWorkout = {
   date: string;
   exercises: { exerciseId: string; sets: { weight: number; reps: number }[] }[];
@@ -626,7 +627,7 @@ export type ProgressScore = {
   period: ScorePeriod;
   /** False when there are no saved workouts in the period — no score is made up. */
   hasData: boolean;
-  /** 0–1000, rounded for display AND used for ranking, so the order always matches what's shown. */
+  /** 0–1000, rounded-none for display AND used for ranking, so the order always matches what's shown. */
   score: number;
   strength: StrengthProgress;
   /** Component fill, 0..1. `weightFactor` (0..1) scales the nominal weight:
@@ -800,15 +801,22 @@ export type Leaderboard = {
   participants: number;
 };
 
+/** One ranked user, as kept server-side between requests. Unlike the public
+ * `LeaderboardEntry` it carries `userId` (so a viewer's own row can be found
+ * later) — it must never be sent to the client as-is. */
+export type RankedUser = Omit<LeaderboardEntry, "isCurrentUser"> & { userId: string };
+
 /** Scores every candidate with the shared formula and ranks them. Only users
  * with at least one saved workout in the period are ranked. Ties are broken
- * deterministically: score → strength → consistency → PRs → user id. */
-export function rankLeaderboard(
+ * deterministically: score → strength → consistency → PRs → user id.
+ *
+ * The result does not depend on who is viewing, so it can be computed once
+ * and shared by all viewers (see `buildLeaderboardView`). */
+export function rankCandidates(
   candidates: LeaderboardCandidate[],
   period: ScorePeriod,
-  currentUserId: string,
   today: string = getTodayDateString(),
-): Leaderboard {
+): RankedUser[] {
   const scored = candidates
     .map((candidate) => {
       const result = calculateProgressScore(candidate.workouts, period, today);
@@ -825,14 +833,27 @@ export function rankLeaderboard(
       (a.candidate.userId < b.candidate.userId ? -1 : a.candidate.userId > b.candidate.userId ? 1 : 0),
   );
 
-  const entries: LeaderboardEntry[] = scored.map(({ candidate, result }, index) => ({
+  return scored.map(({ candidate, result }, index) => ({
+    userId: candidate.userId,
     rank: index + 1,
     name: candidate.name,
     score: result.score,
     progressPct: result.strength.progressPct,
     workouts: result.workouts,
     prs: result.prs,
-    isCurrentUser: candidate.userId === currentUserId,
+  }));
+}
+
+/** The viewer-specific page model from a shared ranking: top N, the viewer's
+ * own row, and the participant count — public fields only (no user ids). */
+export function buildLeaderboardView(
+  ranked: RankedUser[],
+  period: ScorePeriod,
+  currentUserId: string,
+): Leaderboard {
+  const entries: LeaderboardEntry[] = ranked.map(({ userId, ...entry }) => ({
+    ...entry,
+    isCurrentUser: userId === currentUserId,
   }));
 
   return {
@@ -841,4 +862,14 @@ export function rankLeaderboard(
     me: entries.find((entry) => entry.isCurrentUser) ?? null,
     participants: entries.length,
   };
+}
+
+/** Ranks the candidates and builds the page model for `currentUserId`. */
+export function rankLeaderboard(
+  candidates: LeaderboardCandidate[],
+  period: ScorePeriod,
+  currentUserId: string,
+  today: string = getTodayDateString(),
+): Leaderboard {
+  return buildLeaderboardView(rankCandidates(candidates, period, today), period, currentUserId);
 }

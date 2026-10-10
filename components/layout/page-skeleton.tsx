@@ -36,7 +36,7 @@ export async function PageSkeleton({
       </div>
       <div className="flex flex-col gap-4">
         {Array.from({ length: blocks }, (_, i) => (
-          <Skeleton key={i} className="h-28 w-full rounded-lg" />
+          <Skeleton key={i} className="h-28 w-full rounded-none" />
         ))}
       </div>
     </div>

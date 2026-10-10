@@ -3,6 +3,7 @@
 import { Check, Dumbbell, Flame, Layers3, Lock, Medal, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { SectionHeading } from "@/components/progress/section-heading";
 import { cn } from "@/lib/utils";
 import type { Achievement, AchievementId } from "@/lib/progress/analytics";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
@@ -34,12 +35,13 @@ export function Achievements({ achievements }: AchievementsProps) {
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="achievements-title">
-      <div className="flex flex-col gap-0.5">
-        <h2 id="achievements-title" className="text-lg font-semibold tracking-tight text-foreground">
-          {t.progress.achievements.title}
-        </h2>
-        <p className="text-xs text-muted-foreground">{t.progress.ui.achievementsSubtitle}</p>
-      </div>
+      <SectionHeading
+        id="achievements-title"
+        icon={Medal}
+        tone="amber"
+        title={t.progress.achievements.title}
+        subtitle={t.progress.ui.achievementsSubtitle}
+      />
       <ul className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-3">
         {achievements.map((achievement) => {
           const name = t.progress.achievements.items[achievement.id];
@@ -50,19 +52,19 @@ export function Achievements({ achievements }: AchievementsProps) {
             <li
               key={achievement.id}
               className={cn(
-                "flex min-w-0 flex-col gap-2.5 rounded-2xl border p-4 transition-colors duration-200",
+                "flex min-w-0 flex-col gap-2.5 rounded-none border p-4 transition-colors duration-200",
                 achievement.unlocked
-                  ? "border-primary/30 bg-primary/5"
-                  : "border-border bg-card",
+                  ? "border-amber-400/30 bg-gradient-to-br from-amber-400/10 to-transparent"
+                  : "border-border bg-surface",
               )}
             >
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-none border",
                     achievement.unlocked
-                      ? "border-primary/30 bg-primary/10 text-primary"
+                      ? "border-white/20 bg-gradient-to-br from-yellow-300 to-amber-500 text-white shadow-md shadow-yellow-500/30"
                       : "border-border bg-muted/30 text-muted-foreground/70",
                   )}
                 >
@@ -77,14 +79,14 @@ export function Achievements({ achievements }: AchievementsProps) {
                   {name}
                 </span>
                 {achievement.unlocked ? (
-                  <Check className="h-4 w-4 shrink-0 text-primary" strokeWidth={2.25} aria-hidden="true" />
+                  <Check className="h-4 w-4 shrink-0 text-amber-300" strokeWidth={2.25} aria-hidden="true" />
                 ) : (
                   <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" strokeWidth={1.75} aria-hidden="true" />
                 )}
               </div>
 
               {achievement.unlocked ? (
-                <span className="text-xs font-medium text-primary">{t.progress.achievements.unlocked}</span>
+                <span className="text-xs font-medium text-amber-300">{t.progress.achievements.unlocked}</span>
               ) : (
                 <>
                   <span className="text-xs text-muted-foreground tabular-nums">
@@ -96,10 +98,10 @@ export function Achievements({ achievements }: AchievementsProps) {
                     aria-valuemin={0}
                     aria-valuemax={achievement.target}
                     aria-valuenow={achievement.progress}
-                    className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                    className="h-1.5 w-full overflow-hidden rounded-none bg-muted"
                   >
                     <div
-                      className="h-full rounded-full bg-muted-foreground/50 motion-safe:transition-[width] motion-safe:duration-200"
+                      className="h-full rounded-none bg-gradient-to-r from-emerald-400/70 to-cyan-400/70 motion-safe:transition-[width] motion-safe:duration-200"
                       style={{ width: `${percent}%` }}
                     />
                   </div>

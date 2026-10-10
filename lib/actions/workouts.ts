@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { requireUser } from "@/lib/auth/dal";
 import { getTodayDateString } from "@/lib/date";
-import { getExercisesForUser } from "@/lib/storage/exercises";
+import { getOwnedExerciseFlags } from "@/lib/storage/exercises";
+import { LEADERBOARD_CACHE_TAG } from "@/lib/storage/leaderboard";
 import {
   createOrUpdateWorkout,
   deleteWorkout,
@@ -43,6 +44,16 @@ function isValidReps(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
 }
 
+/** Marks the shared leaderboard ranking stale after any workout change, so
+ * the next leaderboard visit recomputes it instead of serving the cached
+ * copy. `{ expire: 1 }` is stale-while-revalidate: at most about one second
+ * of stale data can still be served right after a save, and the call itself
+ * adds nothing to the action response. (It does NOT clear the browser's page
+ * cache — that is what `revalidatePath` next to it is for.) */
+function invalidateLeaderboardCache() {
+  revalidateTag(LEADERBOARD_CACHE_TAG, { expire: 1 });
+}
+
 /** Saves today's workout for the authenticated user. The workout's date is
  * always today's date computed on the server (see `getTodayDateString`) —
  * a date is never accepted from the client. Every exercise id is checked
@@ -57,11 +68,15 @@ export async function saveWorkoutAction(
     throw new Error("EMPTY_WORKOUT");
   }
 
-  const userExercises = await getExercisesForUser(user.id);
-  const userExerciseIds = new Set(userExercises.map((exercise) => exercise.id));
-  const oneHandedIds = new Set(
-    userExercises.filter((exercise) => exercise.isOneHanded).map((exercise) => exercise.id),
-  );
+  // Ownership check: one narrow read of just the exercises this request
+  // references, scoped to the session user (not the whole exercise list).
+  const requestedIds = new Set<string>();
+  for (const exercise of exercises) {
+    if (typeof exercise?.exerciseId === "string" && exercise.exerciseId.length > 0) {
+      requestedIds.add(exercise.exerciseId);
+    }
+  }
+  const ownedExercises = await getOwnedExerciseFlags(user.id, [...requestedIds]);
 
   const seenExerciseIds = new Set<string>();
   const validatedExercises: WorkoutExercise[] = [];
@@ -71,7 +86,7 @@ export async function saveWorkoutAction(
       throw new Error("INVALID_EXERCISE");
     }
 
-    if (!userExerciseIds.has(exercise.exerciseId)) {
+    if (!ownedExercises.has(exercise.exerciseId)) {
       // Either a forged id or an exercise that has since been deleted.
       throw new Error("EXERCISE_NOT_FOUND");
     }
@@ -108,7 +123,10 @@ export async function saveWorkoutAction(
         reps: set.reps,
         // A hand is only stored for one-handed exercises (normalized to null
         // for all others); legacy/unchosen one-handed sets stay null.
-        hand: oneHandedIds.has(exercise.exerciseId) && isSetHand(set.hand) ? set.hand : null,
+        hand:
+          ownedExercises.get(exercise.exerciseId)?.isOneHanded === true && isSetHand(set.hand)
+            ? set.hand
+            : null,
         isHardSet: set.isHardSet ?? true,
       };
     });
@@ -130,7 +148,14 @@ export async function saveWorkoutAction(
     exercises: validatedExercises,
   });
 
+  // Re-render /treniruote and drop the browser's cached copies of pages.
+  // This is NOT redundant: Next reuses cached pages on browser back/forward
+  // (and, with `staleTimes`, for a short while on normal navigation). Without
+  // this, going Save -> another page -> Back would restore /treniruote with
+  // the workout as it was BEFORE this save, and saving again from that stale
+  // screen would overwrite what was just saved.
   revalidatePath("/treniruote");
+  invalidateLeaderboardCache();
 
   return workout;
 }
@@ -146,6 +171,7 @@ export async function clearTodayWorkoutAction(): Promise<void> {
   const user = await requireUser();
 
   await deleteWorkout(user.id, getTodayDateString());
+  invalidateLeaderboardCache();
 
   // Every page that is derived from saved workouts.
   revalidatePath("/treniruote");
@@ -179,6 +205,8 @@ export async function setExerciseCompletedAction(
     completed,
   );
 
+  // Same reason as in saveWorkoutAction: a cached /treniruote must not come
+  // back (Back button, staleTimes) showing the old "done" state.
   if (persisted) revalidatePath("/treniruote");
 
   return { persisted };

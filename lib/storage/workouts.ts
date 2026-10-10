@@ -2,8 +2,14 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 
-import { db } from "@/lib/db";
-import { isSetHand, type SetHand, type Workout, type WorkoutExercise } from "@/lib/types/workout";
+import { db, RELATION_LOAD_STRATEGY } from "@/lib/db";
+import {
+  isSetHand,
+  type AnalyticsWorkout,
+  type SetHand,
+  type Workout,
+  type WorkoutExercise,
+} from "@/lib/types/workout";
 
 // Shape returned by every query below: a Workout row with its exercises and
 // each exercise's sets, both ordered by the `position` column so the array
@@ -67,11 +73,40 @@ function toWorkout(row: WorkoutRow): Workout {
  * input. */
 export async function getWorkoutsForUser(userId: string): Promise<Workout[]> {
   const rows = await db.workout.findMany({
+    relationLoadStrategy: RELATION_LOAD_STRATEGY,
     where: { userId },
     orderBy: { date: "asc" },
     include: WORKOUT_INCLUDE,
   });
   return rows.map(toWorkout);
+}
+
+/** All of a user's workouts, reduced to what the progress / records / score
+ * calculations read (date, exercise id, and each set's weight, reps and
+ * hard-set flag). Same rows and the same ordering as `getWorkoutsForUser`
+ * (workouts by date, exercises and sets by their saved `position`), but no ids,
+ * timestamps, hands or other columns — less to read from the database, hold in
+ * memory and (for /progress) send to the browser. `userId` must come from the
+ * authenticated session. */
+export async function getWorkoutsForAnalytics(userId: string): Promise<AnalyticsWorkout[]> {
+  return db.workout.findMany({
+    relationLoadStrategy: RELATION_LOAD_STRATEGY,
+    where: { userId },
+    orderBy: { date: "asc" },
+    select: {
+      date: true,
+      exercises: {
+        orderBy: { position: "asc" },
+        select: {
+          exerciseId: true,
+          sets: {
+            orderBy: { position: "asc" },
+            select: { weight: true, reps: true, isHardSet: true },
+          },
+        },
+      },
+    },
+  });
 }
 
 /** One workout per user per date — callers must always pass a userId that
@@ -81,6 +116,7 @@ export async function getWorkoutByDate(
   date: string,
 ): Promise<Workout | null> {
   const row = await db.workout.findUnique({
+    relationLoadStrategy: RELATION_LOAD_STRATEGY,
     where: { userId_date: { userId, date } },
     include: WORKOUT_INCLUDE,
   });
@@ -95,17 +131,25 @@ export async function getWorkoutByDate(
  * day are torn down and the new ones written back in the same transaction,
  * so a failure partway through (e.g. a dropped connection) rolls back
  * cleanly instead of leaving the workout with only some of its exercises
- * saved. */
+ * saved.
+ *
+ * The rows are written with two bulk inserts (all exercises, then all sets)
+ * instead of one nested create per exercise, so the number of database
+ * round trips no longer grows with the number of exercises. Ids for the new
+ * workout-exercise rows are generated here so the sets can reference them
+ * in the second insert. The returned Workout is built from the validated
+ * input that was just written (the caller has already normalized it), so no
+ * read-back is needed. */
 export async function createOrUpdateWorkout(
   userId: string,
   data: { date: string; exercises: WorkoutExercise[] },
 ): Promise<Workout> {
-  const row = await db.$transaction(async (tx: Prisma.TransactionClient) => {
+  const workout = await db.$transaction(async (tx: Prisma.TransactionClient) => {
     // Touch-or-create the workout row itself. The `update: {}` branch still
     // bumps `updatedAt` (it's `@updatedAt` in the schema) without touching
     // anything else, matching the previous behavior of always refreshing
     // updatedAt on save while only setting createdAt once.
-    const workout = await tx.workout.upsert({
+    const row = await tx.workout.upsert({
       where: { userId_date: { userId, date: data.date } },
       create: { userId, date: data.date },
       update: {},
@@ -116,42 +160,62 @@ export async function createOrUpdateWorkout(
     // wrote the whole `exercises` array it was given. Deleting the
     // WorkoutExercise rows cascades to their WorkoutSet rows (see
     // prisma/schema.prisma), so this alone clears out the old sets too.
-    await tx.workoutExercise.deleteMany({ where: { workoutId: workout.id } });
+    await tx.workoutExercise.deleteMany({ where: { workoutId: row.id } });
 
-    for (const [exerciseIndex, exercise] of data.exercises.entries()) {
-      await tx.workoutExercise.create({
-        data: {
-          workoutId: workout.id,
-          exerciseId: exercise.exerciseId,
-          completed: exercise.completed,
-          usesBodyweight: exercise.usesBodyweight,
-          position: exerciseIndex,
-          sets: {
-            create: exercise.sets.map((set, setIndex) => ({
-              // Keep the id the caller already assigned (see
-              // saveWorkoutAction, which fills in a fresh
-              // crypto.randomUUID() for any set that doesn't have one yet)
-              // rather than letting Prisma generate a new one, so ids stay
-              // stable across saves the way they did with the JSON store.
-              id: set.id,
-              weight: set.weight,
-              reps: set.reps,
-              hand: set.hand,
-              isHardSet: set.isHardSet,
-              position: setIndex,
-            })),
-          },
-        },
-      });
+    if (data.exercises.length > 0) {
+      const exerciseRows = data.exercises.map((exercise, exerciseIndex) => ({
+        id: crypto.randomUUID(),
+        workoutId: row.id,
+        exerciseId: exercise.exerciseId,
+        completed: exercise.completed,
+        usesBodyweight: exercise.usesBodyweight,
+        position: exerciseIndex,
+      }));
+      await tx.workoutExercise.createMany({ data: exerciseRows });
+
+      const setRows = data.exercises.flatMap((exercise, exerciseIndex) =>
+        exercise.sets.map((set, setIndex) => ({
+          // Keep the id the caller already assigned (see
+          // saveWorkoutAction, which fills in a fresh crypto.randomUUID()
+          // for any set that doesn't have one yet) rather than letting
+          // Prisma generate a new one, so ids stay stable across saves the
+          // way they did with the JSON store.
+          id: set.id,
+          workoutExerciseId: exerciseRows[exerciseIndex].id,
+          weight: set.weight,
+          reps: set.reps,
+          hand: set.hand,
+          isHardSet: set.isHardSet,
+          position: setIndex,
+        })),
+      );
+      if (setRows.length > 0) {
+        await tx.workoutSet.createMany({ data: setRows });
+      }
     }
 
-    return tx.workout.findUniqueOrThrow({
-      where: { id: workout.id },
-      include: WORKOUT_INCLUDE,
-    });
+    return row;
   });
 
-  return toWorkout(row);
+  return {
+    id: workout.id,
+    userId: workout.userId,
+    date: workout.date,
+    exercises: data.exercises.map((exercise) => ({
+      exerciseId: exercise.exerciseId,
+      completed: exercise.completed,
+      usesBodyweight: exercise.usesBodyweight,
+      sets: exercise.sets.map((set) => ({
+        id: set.id,
+        weight: set.weight,
+        reps: set.reps,
+        hand: set.hand,
+        isHardSet: set.isHardSet,
+      })),
+    })),
+    createdAt: workout.createdAt.toISOString(),
+    updatedAt: workout.updatedAt.toISOString(),
+  };
 }
 
 /** Flips the `completed` flag of one exercise in the user's workout for
@@ -193,6 +257,7 @@ export async function getWorkoutHistoryForUser(
   limit: number,
 ): Promise<{ workouts: Workout[]; hasMore: boolean }> {
   const rows = await db.workout.findMany({
+    relationLoadStrategy: RELATION_LOAD_STRATEGY,
     where: { userId },
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     take: limit + 1,
@@ -210,6 +275,7 @@ export async function getWorkoutByIdForUser(
   workoutId: string,
 ): Promise<Workout | null> {
   const row = await db.workout.findFirst({
+    relationLoadStrategy: RELATION_LOAD_STRATEGY,
     where: { id: workoutId, userId },
     include: WORKOUT_INCLUDE,
   });
@@ -227,26 +293,28 @@ export type LastExerciseSession = {
   sets: { weight: number; reps: number; hand: SetHand | null }[];
 };
 
-/** Resolves "last time" for many exercises with a fixed number of queries
- * (two), regardless of how many exercises are requested — no per-exercise
- * N+1. Returns a map keyed by `exerciseId`; exercises with no earlier
- * workout containing sets are simply absent.
+/** Resolves "last time" for ALL of a user's exercises with a fixed number of
+ * queries (two), regardless of how many exercises they have — no
+ * per-exercise N+1. It needs only `userId` and the date, so callers can run
+ * it in parallel with the reads that load the exercise list itself.
+ * Returns a map keyed by `exerciseId`; exercises with no earlier workout
+ * containing sets are simply absent. Entries can exist for exercise ids that
+ * were since deleted — callers that only show current exercises should
+ * ignore those keys.
  *
  * `userId` must come from the authenticated session, never from the
  * client. */
 export async function getLastWorkoutDataForExercises(
   userId: string,
-  exerciseIds: string[],
   beforeDate: string,
 ): Promise<Record<string, LastExerciseSession>> {
-  if (exerciseIds.length === 0) return {};
-
   // 1) Lightweight: which workout-exercise row is the most recent one per
   //    exercise (no set rows loaded yet). `date` is YYYY-MM-DD text, so
-  //    `lt` / ordering match chronological order.
+  //    `lt` / ordering match chronological order. Rows come back newest
+  //    first, so the first row seen per exercise (below) is its latest.
   const candidates = await db.workoutExercise.findMany({
+    relationLoadStrategy: RELATION_LOAD_STRATEGY,
     where: {
-      exerciseId: { in: exerciseIds },
       sets: { some: {} },
       workout: { userId, date: { lt: beforeDate } },
     },
@@ -276,6 +344,7 @@ export async function getLastWorkoutDataForExercises(
 
   // 2) Load the sets for just those rows.
   const rows = await db.workoutExercise.findMany({
+    relationLoadStrategy: RELATION_LOAD_STRATEGY,
     where: { id: { in: [...latestByExercise.values()].map((v) => v.id) } },
     select: {
       id: true,

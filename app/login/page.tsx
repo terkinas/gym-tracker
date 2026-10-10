@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/auth/login-form";
-import { getCurrentUser } from "@/lib/auth/dal";
+import { getVerifiedUser } from "@/lib/auth/dal";
 import { getTranslations } from "@/lib/i18n/get-translations";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LoginPage() {
-  if (await getCurrentUser()) redirect("/treniruote");
+  if (await getVerifiedUser()) redirect("/treniruote");
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-5 py-16">

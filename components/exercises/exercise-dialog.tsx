@@ -41,7 +41,7 @@ export function ExerciseDialog({
 }: ExerciseDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto overscroll-contain rounded-2xl p-5 sm:p-6">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto overscroll-contain rounded-none p-5 sm:p-6">
         {/* The form state lives in ExerciseForm, which is rendered INSIDE
             DialogContent. Radix unmounts DialogContent when the dialog
             closes, so ExerciseForm remounts — and its useState initializers
@@ -149,7 +149,7 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
             }}
             placeholder={t.exercises.dialog.namePlaceholder}
             aria-invalid={Boolean(error)}
-            className="h-12 rounded-xl pl-11 text-base shadow-none sm:text-sm"
+            className="h-12 rounded-none pl-11 text-base shadow-none sm:text-sm"
             autoFocus
           />
         </div>
@@ -176,7 +176,7 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
                   if (error) setError(null);
                 }}
                 className={cn(
-                  "flex min-h-12 min-w-0 items-center gap-2.5 rounded-xl border px-2.5 py-1.5 text-left text-sm font-medium transition-[background-color,border-color,transform] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:active:scale-100",
+                  "flex min-h-12 min-w-0 items-center gap-2.5 rounded-none border px-2.5 py-1.5 text-left text-sm font-medium transition-[background-color,border-color,transform] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:active:scale-100",
                   isSelected
                     ? cn(tile, "text-foreground")
                     : "border-border/60 bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -185,7 +185,7 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
               >
                 <span
                   aria-hidden="true"
-                  className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border", tile)}
+                  className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-none border", tile)}
                 >
                   <Icon className="h-4 w-4" strokeWidth={1.75} />
                 </span>
@@ -217,7 +217,7 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
                   )
                 }
                 className={cn(
-                  "inline-flex h-10 items-center rounded-xl border px-3.5 text-sm font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "inline-flex h-10 items-center rounded-none border px-3.5 text-sm font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   isSelected
                     ? cn(tile, "text-foreground")
                     : "border-border/60 bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -232,11 +232,11 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
 
       <label
         htmlFor="exercise-one-handed"
-        className="flex cursor-pointer items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3.5 transition-colors duration-150 hover:bg-muted/40"
+        className="flex cursor-pointer items-center gap-3 rounded-none border border-border/60 bg-muted/20 p-3.5 transition-colors duration-150 hover:bg-muted/40"
       >
         <span
           aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 text-muted-foreground"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
         >
           <ArrowLeftRight className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
         </span>
@@ -268,12 +268,12 @@ function ExerciseForm({ exercise, onOpenChange, onSubmit }: ExerciseFormProps) {
           variant="outline"
           disabled={isSubmitting}
           onClick={() => onOpenChange(false)}
-          className="h-12 rounded-xl sm:h-11"
+          className="h-12 rounded-none sm:h-11"
         >
           <X className="h-4 w-4" strokeWidth={2} />
           {t.common.cancel}
         </Button>
-        <Button type="submit" loading={isSubmitting} className="h-12 rounded-xl sm:h-11">
+        <Button type="submit" loading={isSubmitting} className="h-12 rounded-none sm:h-11">
           {!isSubmitting && <SubmitIcon className="h-4 w-4" strokeWidth={2} />}
           {submitLabel}
         </Button>

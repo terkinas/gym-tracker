@@ -21,7 +21,7 @@ interface ExerciseCardProps {
 }
 
 const ACTION_BUTTON =
-  "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-accent/70 disabled:pointer-events-none sm:h-9 sm:w-9";
+  "flex h-11 w-11 shrink-0 items-center justify-center rounded-none text-muted-foreground transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-accent/70 disabled:pointer-events-none sm:h-9 sm:w-9";
 
 export function ExerciseCard({
   exercise,
@@ -36,7 +36,8 @@ export function ExerciseCard({
   return (
     <div
       className={cn(
-        "group relative flex items-center gap-3 overflow-hidden rounded-xl border border-border bg-card py-3 pr-2 pl-5 transition-[background-color,border-color,opacity,transform] duration-200 hover:border-foreground/15 hover:bg-accent/40 focus-within:border-foreground/15 sm:pr-3",
+        "group relative flex items-center gap-3.5 overflow-hidden rounded-none border border-border bg-card bg-gradient-to-r from-transparent to-transparent py-3.5 pr-2 pl-5 transition-[background-color,border-color,opacity,transform] duration-200 hover:border-foreground/20 focus-within:border-foreground/20 sm:pr-3",
+        accent.wash,
         "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200",
         isHighlighted && "border-primary/40 bg-primary/5",
         isLeaving && "pointer-events-none scale-[0.98] opacity-0 motion-reduce:scale-100",
@@ -44,7 +45,7 @@ export function ExerciseCard({
     >
       <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-1", accent.bar)} />
 
-      <CategoryTile category={exercise.category} />
+      <CategoryTile category={exercise.category} className="h-12 w-12" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <span className="line-clamp-2 text-sm leading-snug font-medium break-words text-foreground sm:text-base">
@@ -62,7 +63,7 @@ export function ExerciseCard({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center sm:gap-0.5">
+      <div className="flex shrink-0 items-center transition-opacity duration-150 sm:gap-0.5 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-hover:opacity-100">
         <button
           type="button"
           onClick={() => onEdit(exercise)}

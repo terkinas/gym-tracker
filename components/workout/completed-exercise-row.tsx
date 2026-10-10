@@ -22,8 +22,8 @@ export function CompletedExerciseRow({ exercise, category, onReopen }: Completed
   const t = useTranslations();
 
   return (
-    <div className="flex items-center gap-2.5 rounded-2xl border border-border/60 bg-card/50 py-1.5 pr-1.5 pl-3 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-      <CategoryTile category={category} className="h-8 w-8 rounded-lg opacity-70" />
+    <div className="flex items-center gap-2.5 rounded-none border border-border/60 bg-card/50 py-1.5 pr-1.5 pl-3 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+      <CategoryTile category={category} className="h-8 w-8 rounded-none opacity-70" />
       <h3 className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground">
         {exercise.exerciseName}
       </h3>
@@ -36,7 +36,7 @@ export function CompletedExerciseRow({ exercise, category, onReopen }: Completed
         variant="ghost"
         size="sm"
         onClick={onReopen}
-        className="h-11 shrink-0 rounded-xl px-3 text-muted-foreground active:scale-[0.97] hover:text-foreground"
+        className="h-11 shrink-0 rounded-none px-3 text-muted-foreground active:scale-[0.97] hover:text-foreground"
       >
         <Undo2 className="h-4 w-4" strokeWidth={1.75} />
         {t.workout.undoDoneAction}

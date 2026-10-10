@@ -12,6 +12,7 @@ import {
   PersonStanding,
 } from "lucide-react";
 
+import { TONES, ToneTile, type Tone } from "@/components/progress/section-heading";
 import { CategoryTile, StatusBadge, categoryMeta } from "@/components/workout/workout-ui";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { getWorkoutStats } from "@/lib/history/stats";
@@ -28,21 +29,29 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 function SummaryTile({
-  icon: Icon,
+  icon,
+  tone,
   value,
   label,
 }: {
   icon: typeof Dumbbell;
+  tone: Tone;
   value: string;
   label: string;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-2xl border border-border bg-card px-4 py-3.5">
-      <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} aria-hidden="true" />
-      <span className="text-2xl leading-none font-semibold text-foreground tabular-nums">
-        {value}
-      </span>
-      <span className="truncate text-xs text-muted-foreground">{label}</span>
+    <div className="relative flex min-w-0 flex-col gap-3 overflow-hidden rounded-none border border-border bg-card p-3.5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200 sm:p-4">
+      <span
+        aria-hidden="true"
+        className={cn("pointer-events-none absolute -top-10 -right-10 h-28 w-28 blur-2xl", TONES[tone].glow)}
+      />
+      <ToneTile icon={icon} tone={tone} className="relative" />
+      <div className="relative flex min-w-0 flex-col gap-1">
+        <span className="text-3xl leading-none font-bold tracking-tight text-foreground tabular-nums">
+          {value}
+        </span>
+        <span className="truncate text-xs text-muted-foreground">{label}</span>
+      </div>
     </div>
   );
 }
@@ -75,7 +84,7 @@ export default async function WorkoutDetailPage({
     <div className="mx-auto w-full max-w-3xl flex-1 px-5 py-10 lg:px-8 lg:py-14">
       <Link
         href={`/istorija?month=${workout.date.slice(0, 7)}`}
-        className="mb-4 -ml-3 inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        className="mb-4 -ml-3 inline-flex h-11 items-center gap-2 rounded-none px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         {t.history.backToHistory}
@@ -101,16 +110,19 @@ export default async function WorkoutDetailPage({
       <section className="mb-8 grid grid-cols-3 gap-2.5 sm:gap-3">
         <SummaryTile
           icon={Dumbbell}
+          tone="violet"
           value={formatCount(stats.exerciseCount, locale)}
           label={pluralizeThree(locale, stats.exerciseCount, t.history.exercisesWord)}
         />
         <SummaryTile
           icon={Layers3}
+          tone="blue"
           value={formatCount(stats.setCount, locale)}
           label={pluralizeThree(locale, stats.setCount, t.history.setsWord)}
         />
         <SummaryTile
           icon={Flame}
+          tone="orange"
           value={formatCount(stats.hardSetCount, locale)}
           label={t.history.hardSets}
         />
@@ -120,6 +132,7 @@ export default async function WorkoutDetailPage({
         {workout.exercises.map((entry, index) => {
           const exercise = exerciseById.get(entry.exerciseId);
           const oneHanded = exercise?.isOneHanded === true;
+          const { bar, wash } = categoryMeta(exercise?.category);
           const cols = oneHanded
             ? "grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2.5rem]"
             : "grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1fr)_2.5rem]";
@@ -127,15 +140,15 @@ export default async function WorkoutDetailPage({
             <article
               key={`${entry.exerciseId}-${index}`}
               style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
-              className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200 motion-safe:fill-mode-backwards sm:p-5"
+              className={cn(
+                "relative overflow-hidden rounded-none border border-border bg-card bg-gradient-to-r from-transparent to-transparent py-4 pr-4 pl-5 transition-[background-color,border-color] duration-200 hover:border-foreground/20 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200 motion-safe:fill-mode-backwards sm:py-5 sm:pr-5",
+                wash,
+              )}
             >
-              <span
-                aria-hidden="true"
-                className={cn("absolute inset-y-0 left-0 w-1", categoryMeta(exercise?.category).bar)}
-              />
+              <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-1", bar)} />
 
-              <div className="flex min-w-0 items-start gap-3">
-                <CategoryTile category={exercise?.category} />
+              <div className="flex min-w-0 items-center gap-3.5">
+                <CategoryTile category={exercise?.category} className="h-12 w-12" />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <h2 className="text-base font-semibold break-words text-foreground">
                     {exercise?.name ?? t.history.unknownExercise}
@@ -157,12 +170,22 @@ export default async function WorkoutDetailPage({
                     )}
                   </div>
                 </div>
+                {entry.sets.length > 0 && (
+                  <span className="shrink-0 text-right">
+                    <span className="block text-2xl leading-none font-bold text-foreground tabular-nums">
+                      {formatCount(entry.sets.length, locale)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {pluralizeThree(locale, entry.sets.length, t.history.setsWord)}
+                    </span>
+                  </span>
+                )}
               </div>
 
               {entry.sets.length === 0 ? (
                 <p className="mt-4 text-sm text-muted-foreground">{t.workout.noSetsYet}</p>
               ) : (
-                <div className="mt-4 flex flex-col rounded-xl border border-border/60 bg-muted/20 px-3">
+                <div className="mt-4 flex flex-col rounded-none border border-border/60 bg-muted/20 px-3">
                   <div
                     className={`grid ${cols} items-center gap-2 border-b border-border/60 py-2 text-[0.7rem] font-medium tracking-wider text-muted-foreground uppercase sm:gap-3`}
                   >
@@ -181,8 +204,13 @@ export default async function WorkoutDetailPage({
                       key={set.id}
                       className={`grid ${cols} items-center gap-2 border-b border-border/40 py-2.5 text-sm text-foreground tabular-nums last:border-b-0 sm:gap-3`}
                     >
-                      <span className="text-muted-foreground">{setIndex + 1}</span>
-                      <span className="font-medium">{formatCount(set.weight, locale)} kg</span>
+                      <span
+                        aria-hidden="true"
+                        className="flex h-6 w-6 items-center justify-center rounded-none border border-border/60 bg-muted/40 text-xs text-muted-foreground"
+                      >
+                        {setIndex + 1}
+                      </span>
+                      <span className="font-semibold">{formatCount(set.weight, locale)} kg</span>
                       <span>{formatCount(set.reps, locale)}</span>
                       {oneHanded && (
                         <span className="truncate text-muted-foreground">
@@ -193,7 +221,7 @@ export default async function WorkoutDetailPage({
                         {set.isHardSet ? (
                           <>
                             <Flame
-                              className="h-4 w-4 text-primary"
+                              className="h-4 w-4 text-orange-400"
                               strokeWidth={1.75}
                               aria-hidden="true"
                             />

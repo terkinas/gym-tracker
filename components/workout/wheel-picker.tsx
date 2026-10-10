@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const ITEM_HEIGHT = 28; // px — one row of the wheel
+const ITEM_HEIGHT = 40; // px — one row of the wheel
 
 /** Index of the option closest to `value` (0 when nothing is chosen yet).
  * "Closest" rather than "exact" so a legacy value that isn't on the wheel
@@ -126,7 +126,7 @@ export function WheelPicker({
       {/* Selection band behind the centred row. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 rounded-md border border-primary/40 bg-primary/10"
+        className="pointer-events-none absolute inset-x-0 rounded-none border border-primary/40 bg-primary/10"
         style={{ top: ITEM_HEIGHT, height: ITEM_HEIGHT }}
       />
 
@@ -140,7 +140,7 @@ export function WheelPicker({
         aria-valuenow={options[displayIndex]}
         onScroll={handleScroll}
         onKeyDown={handleKeyDown}
-        className="relative h-full touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-md [-ms-overflow-style:none] [scrollbar-width:none] [mask-image:linear-gradient(to_bottom,transparent,black_30%,black_70%,transparent)] outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-scrollbar]:hidden"
+        className="relative h-full touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-none [-ms-overflow-style:none] [scrollbar-width:none] [mask-image:linear-gradient(to_bottom,transparent,black_30%,black_70%,transparent)] outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-scrollbar]:hidden"
       >
         <div aria-hidden="true" style={{ height: ITEM_HEIGHT }} />
         {options.map((option, index) => {
@@ -153,14 +153,14 @@ export function WheelPicker({
               className={cn(
                 "flex w-full cursor-pointer snap-center items-baseline justify-center gap-1 whitespace-nowrap tabular-nums transition-colors",
                 selected
-                  ? "items-center text-lg font-semibold text-foreground"
-                  : "items-center text-base text-muted-foreground/60",
+                  ? "items-center text-2xl font-semibold text-foreground"
+                  : "items-center text-xl text-muted-foreground/60",
               )}
               style={{ height: ITEM_HEIGHT }}
             >
               {formatOption(option)}
               {selected && unit && (
-                <span className="text-[0.7rem] font-medium text-muted-foreground">{unit}</span>
+                <span className="text-sm font-medium text-muted-foreground">{unit}</span>
               )}
             </div>
           );

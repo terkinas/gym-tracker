@@ -1,4 +1,5 @@
 import { Award, Dumbbell, TrendingUp } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { YouBadge, formatEntry } from "@/components/leaderboard/leaderboard-row";
 import {
@@ -6,11 +7,12 @@ import {
   RankMark,
   ScoreMeter,
   UserAvatar,
-  progressTone,
+  progressChip,
   rankAccent,
 } from "@/components/leaderboard/leaderboard-ui";
 import type { LeaderboardEntry } from "@/lib/progress/analytics";
 import type { Locale } from "@/lib/i18n/config";
+import { formatCount } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/translations";
 import { cn } from "@/lib/utils";
 
@@ -33,8 +35,21 @@ interface PodiumProps {
   locale: Locale;
 }
 
+function StatRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2">
+      <dt className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+        {icon}
+        <span className="truncate">{label}</span>
+      </dt>
+      <dd className="shrink-0 text-sm font-semibold text-foreground tabular-nums">{children}</dd>
+    </div>
+  );
+}
+
 /** Top 3 as cards: stacked on mobile, a subtle podium (#1 raised and larger)
- * on desktop. Pure presentation of already-ranked entries. */
+ * on desktop. Gold / silver / bronze gradient accents. Pure presentation of
+ * already-ranked entries. */
 export function LeaderboardPodium({ entries, t, locale }: PodiumProps) {
   if (entries.length === 0) return null;
 
@@ -50,20 +65,25 @@ export function LeaderboardPodium({ entries, t, locale }: PodiumProps) {
             key={entry.rank}
             style={{ animationDelay: `${index * 50}ms` }}
             className={cn(
-              "relative flex flex-col gap-4 overflow-hidden rounded-2xl border bg-card p-4 pt-5 sm:p-5 sm:pt-6",
+              "relative flex flex-col gap-4 overflow-hidden rounded-none border bg-card p-4 pt-5 sm:p-5 sm:pt-6",
               "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-safe:fill-mode-backwards",
               DESKTOP_ORDER[entry.rank],
               isFirst && "md:pb-7",
-              entry.isCurrentUser ? "border-primary/40 bg-primary/5" : "border-border",
+              accent?.card,
+              entry.isCurrentUser && "border-primary/50 ring-1 ring-primary/30",
             )}
           >
+            <span aria-hidden="true" className={cn("absolute inset-x-0 top-0 h-1", accent?.line)} />
             <span
               aria-hidden="true"
-              className={cn("absolute inset-x-0 top-0 h-1", accent?.line)}
+              className={cn(
+                "pointer-events-none absolute -top-10 -right-10 h-32 w-32 blur-2xl",
+                accent?.glow,
+              )}
             />
 
-            <div className="flex items-center gap-3">
-              <RankMark rank={entry.rank} className="h-10 w-10 rounded-xl" />
+            <div className="relative flex items-center gap-3">
+              <RankMark rank={entry.rank} className="h-10 w-10 rounded-none" />
               <UserAvatar
                 name={entry.name}
                 highlighted={entry.isCurrentUser}
@@ -77,7 +97,7 @@ export function LeaderboardPodium({ entries, t, locale }: PodiumProps) {
               </span>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="relative flex flex-col gap-2">
               <span className="flex items-baseline gap-2">
                 <TrendingUp
                   className="h-5 w-5 shrink-0 self-center text-primary"
@@ -86,7 +106,7 @@ export function LeaderboardPodium({ entries, t, locale }: PodiumProps) {
                 />
                 <span
                   className={cn(
-                    "leading-none font-semibold tracking-tight text-foreground tabular-nums",
+                    "leading-none font-bold tracking-tight text-foreground tabular-nums",
                     isFirst ? "text-4xl" : "text-3xl",
                   )}
                 >
@@ -97,28 +117,32 @@ export function LeaderboardPodium({ entries, t, locale }: PodiumProps) {
               <ScoreMeter score={entry.score} />
             </div>
 
-            <dl className="grid grid-cols-1 gap-x-3 gap-y-1.5 text-xs text-muted-foreground min-[400px]:grid-cols-3 md:grid-cols-1 lg:grid-cols-3">
-              <div className="flex items-center gap-1.5">
-                <dt className="sr-only">{t.leaderboard.columns.progress}</dt>
-                <dd className={cn("inline-flex items-center gap-1 font-medium tabular-nums", progressTone(entry.progressPct))}>
-                  <ProgressIcon pct={entry.progressPct} className="h-3.5 w-3.5" />
+            <dl className="relative flex flex-col divide-y divide-border/60 rounded-none border border-border/60 bg-muted/20 px-3">
+              <StatRow
+                icon={<ProgressIcon pct={entry.progressPct} className="h-3.5 w-3.5 shrink-0" />}
+                label={t.leaderboard.columns.progress}
+              >
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-none border px-1.5 py-0.5 text-xs",
+                    progressChip(entry.progressPct),
+                  )}
+                >
                   {f.progress}
-                </dd>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <dt className="sr-only">{t.leaderboard.columns.workouts}</dt>
-                <dd className="inline-flex items-center gap-1">
-                  <Dumbbell className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                  {f.workouts}
-                </dd>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <dt className="sr-only">{t.leaderboard.columns.prs}</dt>
-                <dd className="inline-flex items-center gap-1">
-                  <Award className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                  {f.prs}
-                </dd>
-              </div>
+                </span>
+              </StatRow>
+              <StatRow
+                icon={<Dumbbell className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
+                label={t.leaderboard.columns.workouts}
+              >
+                {formatCount(entry.workouts, locale)}
+              </StatRow>
+              <StatRow
+                icon={<Award className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
+                label={t.leaderboard.columns.prs}
+              >
+                {formatCount(entry.prs, locale)}
+              </StatRow>
             </dl>
           </li>
         );

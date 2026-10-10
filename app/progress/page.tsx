@@ -5,7 +5,7 @@ import { ProgressDashboard } from "@/components/progress/progress-dashboard";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { calculateProgressOverview } from "@/lib/progress/analytics";
 import { getExercisesForUser } from "@/lib/storage/exercises";
-import { getWorkoutsForUser } from "@/lib/storage/workouts";
+import { getWorkoutsForAnalytics } from "@/lib/storage/workouts";
 import { getTranslations } from "@/lib/i18n/get-translations";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,7 +26,7 @@ export default async function ProgressPage() {
   // per-exercise progress) from these same two arrays — both server-side
   // for the first render and client-side as the user changes filters.
   const [workouts, exercises] = await Promise.all([
-    getWorkoutsForUser(user.id),
+    getWorkoutsForAnalytics(user.id),
     getExercisesForUser(user.id),
   ]);
 

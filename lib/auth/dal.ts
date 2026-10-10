@@ -4,7 +4,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { SESSION_COOKIE_NAME, decryptSession } from "@/lib/auth/session";
-import { getUserById } from "@/lib/storage/users";
+import { getUserProfileById } from "@/lib/storage/users";
 
 export type CurrentUser = {
   id: string;
@@ -12,20 +12,45 @@ export type CurrentUser = {
   username: string;
 };
 
-// `cache()` de-dupes this within a single request/render pass, so a page and
-// its layout can both call getCurrentUser() without reading the cookie or
-// hitting the JSON file twice.
-export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+const getSession = cache(async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  const session = await decryptSession(token);
+  return decryptSession(token);
+});
 
+// `cache()` de-dupes this within a single request/render pass, so a page and
+// its layout can both call getCurrentUser() without reading the cookie twice.
+//
+// Authentication comes from the signed, expiring session cookie alone — no
+// database round trip. Cookies issued before name/username were embedded in
+// the token only carry `userId`; for those we fall back to one lookup (and a
+// deleted user is rejected there).
+//
+// This does NOT re-check that the user row still exists. Authorization never
+// depends on that: every query and write is scoped by `user.id` (and the FKs
+// reject writes for a missing user). Where a page needs the check it gets it
+// for free from a read it already makes (see app/treniruote/page.tsx), and
+// /login and /register use getVerifiedUser() below.
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  const session = await getSession();
   if (!session) return null;
 
-  const user = await getUserById(session.userId);
-  if (!user) return null;
+  if (session.name !== undefined && session.username !== undefined) {
+    return { id: session.userId, name: session.name, username: session.username };
+  }
 
-  return { id: user.id, name: user.name, username: user.username };
+  // Legacy cookie (userId only).
+  return getUserProfileById(session.userId);
+});
+
+/** Like getCurrentUser, but always confirms the user row still exists. Used
+ * where trusting the cookie alone would be wrong: /login and /register
+ * redirect signed-in users away, and must not bounce a deleted user between
+ * a protected page and /login. */
+export const getVerifiedUser = cache(async (): Promise<CurrentUser | null> => {
+  const session = await getSession();
+  if (!session) return null;
+  return getUserProfileById(session.userId);
 });
 
 /** Throws if there's no authenticated user. Use in Server Actions / data

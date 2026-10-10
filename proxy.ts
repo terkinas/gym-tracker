@@ -24,8 +24,8 @@ function matchesPath(pathname: string, paths: string[]) {
 
 // NOTE: the proxy must stay free of Prisma (Netlify rejects native C++ addons
 // in Middleware). It only verifies the JWT; "does this user still exist" is
-// checked in Node.js server code (see getCurrentUser in lib/auth/dal.ts and
-// the /login, /register and protected pages).
+// checked in Node.js server code where it matters (getVerifiedUser in
+// lib/auth/dal.ts for /login and /register, and /treniruote's own user read).
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

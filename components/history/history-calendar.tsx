@@ -34,7 +34,7 @@ export function HistoryCalendar({
   const canGoNext = nextMonth <= today.slice(0, 7);
 
   const navClass =
-    "flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    "flex h-9 w-9 items-center justify-center rounded-none text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
     <div className="flex flex-col gap-4">
@@ -82,7 +82,7 @@ export function HistoryCalendar({
           const workoutId = workoutByDate.get(date);
           const isToday = date === today;
           const base = cn(
-            "flex aspect-square items-center justify-center rounded-md border text-sm tabular-nums",
+            "flex aspect-square items-center justify-center rounded-none border text-sm tabular-nums",
             isToday && "ring-2 ring-ring ring-offset-1 ring-offset-background",
           );
 
@@ -93,7 +93,7 @@ export function HistoryCalendar({
               aria-label={t.history.openWorkout(formatDate(date, locale))}
               className={cn(
                 base,
-                "border-primary bg-primary font-medium text-primary-foreground transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "border-transparent bg-gradient-to-br from-emerald-400 to-cyan-400 font-medium text-zinc-950 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               )}
             >
               {day}
@@ -112,11 +112,11 @@ export function HistoryCalendar({
 
       <div className="flex items-center gap-5 text-xs text-muted-foreground">
         <span className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-sm border border-primary bg-primary" />
+          <span className="h-3 w-3 rounded-none border border-transparent bg-gradient-to-br from-emerald-400 to-cyan-400" />
           {t.history.calendar.legendWorkout}
         </span>
         <span className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-sm border border-border" />
+          <span className="h-3 w-3 rounded-none border border-border" />
           {t.history.calendar.legendRest}
         </span>
       </div>

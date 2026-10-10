@@ -52,7 +52,10 @@ export function AddExerciseDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      {/* Radix would otherwise focus the first focusable element (the search
+          input) as soon as the dialog opens, which pops the keyboard up on
+          phones. Keep focus where it is; the user taps the search if wanted. */}
+      <DialogContent onOpenAutoFocus={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t.workout.addExerciseDialog.title}</DialogTitle>
           <DialogDescription>
@@ -61,7 +64,7 @@ export function AddExerciseDialog({
         </DialogHeader>
 
         {!hasAnyExercises ? (
-          <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border px-4 py-8 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-none border border-dashed border-border px-4 py-8 text-center">
             <p className="text-sm text-muted-foreground">
               {t.workout.addExerciseDialog.noExercisesLine1}
               <br />
@@ -75,7 +78,7 @@ export function AddExerciseDialog({
             </Link>
           </div>
         ) : availableExercises.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border px-3.5 py-8 text-center text-sm text-muted-foreground">
+          <p className="rounded-none border border-dashed border-border px-3.5 py-8 text-center text-sm text-muted-foreground">
             {t.workout.addExerciseDialog.allAdded}
           </p>
         ) : (
@@ -92,18 +95,17 @@ export function AddExerciseDialog({
                 placeholder={t.common.searchExercise.placeholder}
                 aria-label={t.common.searchExercise.label}
                 className="pl-9"
-                autoFocus
               />
             </div>
 
-            <div className="flex max-h-[min(20rem,50dvh)] min-w-0 flex-col gap-1.5 overflow-y-auto overscroll-contain pr-0.5">
+            <div className="flex max-h-[min(20rem,50dvh)] min-w-0 flex-col gap-1.5 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {filteredExercises.length > 0 ? (
                 filteredExercises.map((exercise) => (
                   <button
                     key={exercise.id}
                     type="button"
                     onClick={() => onSelect(exercise)}
-                    className="group flex min-h-14 w-full min-w-0 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-left transition-[background-color,border-color,transform] duration-150 hover:border-foreground/15 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.99] active:bg-accent/70"
+                    className="group flex min-h-14 w-full min-w-0 items-center gap-3 rounded-none border border-border bg-card px-3 py-2 text-left transition-[background-color,border-color,transform] duration-150 hover:border-foreground/15 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.99] active:bg-accent/70"
                   >
                     <CategoryTile category={exercise.category} className="h-9 w-9" />
                     <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
@@ -124,7 +126,7 @@ export function AddExerciseDialog({
                   </button>
                 ))
               ) : (
-                <p className="rounded-md border border-dashed border-border px-3.5 py-6 text-center text-sm text-muted-foreground">
+                <p className="rounded-none border border-dashed border-border px-3.5 py-6 text-center text-sm text-muted-foreground">
                   {t.workout.addExerciseDialog.noResults}
                 </p>
               )}

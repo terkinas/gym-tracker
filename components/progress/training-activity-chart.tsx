@@ -25,7 +25,7 @@ export function TrainingActivityChart({ data }: TrainingActivityChartProps) {
         </p>
         <Link
           href="/treniruote"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-input px-4 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-input px-4 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Dumbbell className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           {t.progress.ui.noScoreCta}
@@ -37,6 +37,12 @@ export function TrainingActivityChart({ data }: TrainingActivityChartProps) {
   return (
     <ResponsiveContainer width="100%" height={224}>
       <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+        <defs>
+          <linearGradient id="activity-bar" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.55} />
+          </linearGradient>
+        </defs>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.6} />
         <XAxis
           dataKey="date"
@@ -60,7 +66,7 @@ export function TrainingActivityChart({ data }: TrainingActivityChartProps) {
           )}
           cursor={{ fill: "var(--accent)", fillOpacity: 0.5 }}
         />
-        <Bar dataKey="value" fill="var(--primary)" radius={[6, 6, 0, 0]} maxBarSize={28} />
+        <Bar dataKey="value" fill="url(#activity-bar)" radius={[0, 0, 0, 0]} maxBarSize={28} />
       </BarChart>
     </ResponsiveContainer>
   );

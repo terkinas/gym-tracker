@@ -16,7 +16,7 @@ interface CategoryFilterProps {
 }
 
 const CHIP =
-  "inline-flex h-11 shrink-0 snap-start items-center gap-2 rounded-xl border pr-3.5 pl-2 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,transform] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:active:scale-100";
+  "inline-flex h-11 shrink-0 snap-start items-center gap-2 rounded-none border pr-3.5 pl-2 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,transform] duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:active:scale-100";
 
 /** Single-row category filter. Scrolls sideways (never wraps) and bleeds to
  * the screen edge on phones. Pure UI state: the parent filters its own data. */
@@ -27,7 +27,7 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
     <div
       role="group"
       aria-label={t.exercises.filters.label}
-      className="-mx-0 flex snap-x gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] lg:-mx-8 lg:px-8 [&::-webkit-scrollbar]:hidden"
+      className="-mx-5 flex scroll-px-5 snap-x gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] lg:-mx-8 lg:scroll-px-8 lg:px-8 [&::-webkit-scrollbar]:hidden"
     >
       <button
         type="button"
@@ -36,13 +36,13 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
         className={cn(
           CHIP,
           value === "all"
-            ? "border-primary/40 bg-primary/10 text-primary"
+            ? "border-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950"
             : "border-border/60 bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
         )}
       >
         <span
           aria-hidden="true"
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-current/20 bg-current/10"
+          className="flex h-7 w-7 items-center justify-center rounded-none border border-current/20 bg-current/10"
         >
           <LayoutList className="h-3.5 w-3.5" strokeWidth={1.75} />
         </span>
@@ -62,13 +62,16 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
             className={cn(
               CHIP,
               isActive
-                ? cn(tile, "text-foreground")
+                ? cn(tile, "border-transparent shadow-none [text-shadow:0_1px_2px_rgb(0_0_0/0.35)]")
                 : "border-border/60 bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
             <span
               aria-hidden="true"
-              className={cn("flex h-7 w-7 items-center justify-center rounded-lg border", tile)}
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-none border",
+                isActive ? "border-white/25 bg-none bg-white/20 shadow-none" : tile,
+              )}
             >
               <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
             </span>

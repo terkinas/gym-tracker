@@ -38,3 +38,15 @@ export type Workout = {
   createdAt: string;
   updatedAt: string;
 };
+
+/** The only workout fields the progress / records / score calculations read
+ * (see lib/progress/*). A full `Workout` is assignable to it. Loading and
+ * shipping just this shape — no ids, timestamps, hands or flags — keeps the
+ * analytics queries and the `/progress` client payload small. */
+export type AnalyticsWorkout = {
+  date: string;
+  exercises: {
+    exerciseId: string;
+    sets: { weight: number; reps: number; isHardSet: boolean }[];
+  }[];
+};

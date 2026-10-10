@@ -33,7 +33,7 @@ export async function Navbar() {
                     {/* Short labels keep five items on one line within the
                         max-w-5xl navbar; the full label stays as the tooltip. */}
                     <span title={item.label}>{item.shortLabel}</span>
-                    <span className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-primary transition-transform duration-300 ease-out group-hover:scale-x-100 group-data-[active=true]:scale-x-100" />
+                    <span className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald-400 to-cyan-400 transition-transform duration-300 ease-out group-hover:scale-x-100 group-data-[active=true]:scale-x-100" />
                   </NavLink>
                 </li>
               ))}

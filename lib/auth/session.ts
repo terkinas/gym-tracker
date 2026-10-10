@@ -58,6 +58,11 @@ const encodedSecret = new TextEncoder().encode(
 
 export type SessionPayload = {
   userId: string;
+  /** Display fields embedded at login so a request can be authenticated
+   * without a database round trip (see getCurrentUser in lib/auth/dal.ts).
+   * Optional: cookies issued before this change only carry `userId`. */
+  name?: string;
+  username?: string;
 };
 
 export async function encryptSession(payload: SessionPayload): Promise<string> {
@@ -80,7 +85,12 @@ export async function decryptSession(
 
     if (typeof payload.userId !== "string") return null;
 
-    return { userId: payload.userId };
+    return {
+      userId: payload.userId,
+      ...(typeof payload.name === "string" && typeof payload.username === "string"
+        ? { name: payload.name, username: payload.username }
+        : {}),
+    };
   } catch {
     // Expired, tampered with, or signed with a different secret.
     return null;

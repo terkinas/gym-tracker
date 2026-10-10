@@ -136,6 +136,7 @@ const lt = {
     nowBadge: "DABAR",
     hand: { label: "Pusė", placeholder: "Pusė", left: "Kairė", right: "Dešinė" },
     handAria: (setNumber: number) => `${setNumber} serijos pusė`,
+    hardSetLabel: "Sunkus pratimas",
     hardSetAria: (setNumber: number) => `${setNumber} serija yra sunki serija`,
     deleteSetAria: (setNumber: number) => `Ištrinti ${setNumber} seriją`,
     deleteSetDialog: {
@@ -404,6 +405,7 @@ const lt = {
   leaderboard: {
     pageTitle: "Lyderių lentelė",
     pageSubtitle: "Reitingas pagal progresą, o ne pagal pakeltą svorį.",
+    sections: { podium: "Lyderiai", podiumSubtitle: "Trys aukščiausią progreso balą turintys dalyviai.", rest: "Kiti dalyviai" },
     periodAria: "Laikotarpis",
     periods: { "7": "7D", "30": "30D", "90": "90D" },
     columns: { rank: "Vieta", name: "Vardas", score: "Progreso balas", progress: "Progresas", workouts: "Treniruotės", prs: "PR" },
@@ -605,6 +607,7 @@ const en: typeof lt = {
     nowBadge: "NOW",
     hand: { label: "Side", placeholder: "Side", left: "Left", right: "Right" },
     handAria: (setNumber: number) => `Side for set ${setNumber}`,
+    hardSetLabel: "Hard exercise",
     hardSetAria: (setNumber: number) => `Set ${setNumber} is a hard set`,
     deleteSetAria: (setNumber: number) => `Delete set ${setNumber}`,
     deleteSetDialog: {
@@ -866,6 +869,7 @@ const en: typeof lt = {
   leaderboard: {
     pageTitle: "Leaderboard",
     pageSubtitle: "Ranked by progress, not by the weight lifted.",
+    sections: { podium: "Leaders", podiumSubtitle: "The three participants with the highest Progress Score.", rest: "Other participants" },
     periodAria: "Period",
     periods: { "7": "7D", "30": "30D", "90": "90D" },
     columns: { rank: "Rank", name: "Name", score: "Progress Score", progress: "Progress", workouts: "Workouts", prs: "PRs" },

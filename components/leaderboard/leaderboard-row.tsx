@@ -6,7 +6,7 @@ import {
   RankMark,
   ScoreMeter,
   UserAvatar,
-  progressTone,
+  progressChip,
 } from "@/components/leaderboard/leaderboard-ui";
 import { cn } from "@/lib/utils";
 import type { LeaderboardEntry } from "@/lib/progress/analytics";
@@ -52,7 +52,7 @@ interface LeaderboardRowProps {
  * inside a single dashboard-style card. */
 export function LeaderboardRow({ entry, t, locale, index = 0 }: LeaderboardRowProps) {
   const f = formatEntry(entry, t, locale);
-  const tone = progressTone(entry.progressPct);
+  const chip = progressChip(entry.progressPct);
 
   const nameBlock = (
     <span className="flex min-w-0 items-center gap-2">
@@ -65,7 +65,7 @@ export function LeaderboardRow({ entry, t, locale, index = 0 }: LeaderboardRowPr
     <span className="flex min-w-0 flex-col gap-1.5">
       <span className="flex items-baseline gap-1.5">
         <TrendingUp className="h-4 w-4 shrink-0 self-center text-primary" strokeWidth={1.75} aria-hidden="true" />
-        <span className="text-xl leading-none font-semibold text-foreground tabular-nums">{f.score}</span>
+        <span className="text-xl leading-none font-bold text-foreground tabular-nums">{f.score}</span>
         <span className="text-xs text-muted-foreground">{t.leaderboard.pts}</span>
       </span>
       <ScoreMeter score={entry.score} />
@@ -76,14 +76,19 @@ export function LeaderboardRow({ entry, t, locale, index = 0 }: LeaderboardRowPr
     <li
       style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-card px-4 py-3.5 transition-colors duration-200 md:rounded-none md:border-0 md:py-3",
+        "relative overflow-hidden rounded-none border bg-card px-4 py-3.5 transition-colors duration-200 md:rounded-none md:border-0 md:py-3",
         "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:duration-200 motion-safe:fill-mode-backwards",
-        entry.isCurrentUser ? "border-primary/40 bg-primary/5" : "border-border hover:bg-accent/30",
+        entry.isCurrentUser
+          ? "border-primary/40 bg-gradient-to-r from-primary/10 to-transparent"
+          : "border-border hover:bg-accent/30",
         LEADERBOARD_GRID,
       )}
     >
       {entry.isCurrentUser && (
-        <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-primary/60" />
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-400 to-cyan-400"
+        />
       )}
 
       {/* Mobile */}
@@ -93,13 +98,18 @@ export function LeaderboardRow({ entry, t, locale, index = 0 }: LeaderboardRowPr
           <UserAvatar name={entry.name} highlighted={entry.isCurrentUser} className="h-9 w-9" />
           <span className="min-w-0 flex-1">{nameBlock}</span>
           <span className="flex shrink-0 items-baseline gap-1">
-            <span className="text-xl leading-none font-semibold text-foreground tabular-nums">{f.score}</span>
+            <span className="text-xl leading-none font-bold text-foreground tabular-nums">{f.score}</span>
             <span className="text-xs text-muted-foreground">{t.leaderboard.pts}</span>
           </span>
         </div>
         <ScoreMeter score={entry.score} />
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className={cn("inline-flex items-center gap-1 font-medium tabular-nums", tone)}>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-none border px-1.5 py-0.5 font-medium tabular-nums",
+              chip,
+            )}
+          >
             <ProgressIcon pct={entry.progressPct} className="h-3.5 w-3.5" />
             {f.progress}
           </span>
@@ -123,9 +133,16 @@ export function LeaderboardRow({ entry, t, locale, index = 0 }: LeaderboardRowPr
         <span className="min-w-0 flex-1">{nameBlock}</span>
       </span>
       <span className="hidden md:block">{scoreBlock}</span>
-      <span className={cn("hidden items-center justify-end gap-1 font-medium tabular-nums md:flex", tone)}>
-        <ProgressIcon pct={entry.progressPct} className="h-4 w-4" />
-        {f.progress}
+      <span className="hidden items-center justify-end md:flex">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-none border px-2 py-0.5 text-sm font-medium tabular-nums",
+            chip,
+          )}
+        >
+          <ProgressIcon pct={entry.progressPct} className="h-4 w-4" />
+          {f.progress}
+        </span>
       </span>
       <span className="hidden items-center justify-end gap-1.5 text-sm text-muted-foreground tabular-nums md:flex">
         <Dumbbell className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />

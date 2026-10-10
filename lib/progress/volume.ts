@@ -9,7 +9,7 @@
 import { EXERCISE_CATEGORIES } from "@/lib/exercises";
 import type { Exercise, ExerciseCategory } from "@/lib/exercises";
 import { addDaysToDateString } from "@/lib/progress/analytics";
-import type { Workout } from "@/lib/types/workout";
+import type { AnalyticsWorkout } from "@/lib/types/workout";
 
 export type MuscleVolume = {
   muscle: ExerciseCategory;
@@ -20,7 +20,7 @@ export type MuscleVolume = {
 /** Per-muscle direct/indirect hard sets for the 7 days starting at
  * `weekStart` (a Monday, `YYYY-MM-DD`), in the fixed category order. */
 export function getWeeklyMuscleVolume(
-  workouts: Workout[],
+  workouts: AnalyticsWorkout[],
   exercises: Exercise[],
   weekStart: string,
 ): MuscleVolume[] {

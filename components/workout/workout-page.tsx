@@ -87,7 +87,7 @@ function buildInitialExercises(
  * Returns null (→ the usual empty defaults) when there is no usable history,
  * or when the earlier session counted weight differently (bodyweight extra
  * weight vs. plain weight), since the numbers wouldn't mean the same thing.
- * Legacy values that aren't on the wheels (e.g. 62.5 kg) are snapped to the
+ * Legacy values that aren't on the wheels (e.g. 62.3 kg) are snapped to the
  * nearest wheel step instead of producing a set that fails validation. */
 function getLastTimeDefaults(
   lastTime: LastExerciseSession | null | undefined,
@@ -112,7 +112,7 @@ function parseWeightInput(raw: string): number | null {
   if (trimmed === "") return 0;
   if (!/^\d+(\.\d+)?$/.test(trimmed)) return null;
   const value = Number(trimmed);
-  // Must be on the weight wheel: 0–200 kg in 2.5 kg steps.
+  // Must be on the weight wheel: 0–200 kg in 0.5 kg steps.
   if (!isValidWeight(value)) return null;
   return value;
 }
@@ -284,8 +284,15 @@ export function WorkoutPage({
               id: newSetId,
               weight: previous?.weight ?? fromHistory?.weight ?? "",
               reps: previous?.reps ?? fromHistory?.reps ?? "",
-              hand: previous?.hand ?? null,
-              isHardSet: previous?.isHardSet ?? true,
+              // Individual exercises: the side alternates every set by
+              // default (left → right → left …), still editable per set.
+              hand: exercise.isOneHanded
+                ? previous?.hand === "left"
+                  ? "right"
+                  : "left"
+                : null,
+              // Low effort by default: the hard-set box starts unchecked.
+              isHardSet: false,
             },
           ],
         };
@@ -621,7 +628,7 @@ export function WorkoutPage({
         </div>
 
         {hasExercises && (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground tabular-nums">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-none border border-border/60 bg-muted/30 px-2.5 py-1 text-xs font-medium text-muted-foreground tabular-nums">
             <CheckCircle2
               className={`h-3.5 w-3.5 ${doneCount > 0 ? "text-primary" : ""}`}
               strokeWidth={1.75}
@@ -634,7 +641,7 @@ export function WorkoutPage({
 
       <div className="flex flex-col gap-1.5">
         {savedBodyWeight !== null && !isEditingBodyWeight ? (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 py-1 pr-1.5 pl-3 sm:w-fit sm:justify-start sm:gap-4">
+          <div className="flex items-center justify-between gap-3 rounded-none border border-border/60 bg-muted/20 py-1 pr-1.5 pl-3 sm:w-fit sm:justify-start sm:gap-4">
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Scale className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
               <span>
@@ -649,7 +656,7 @@ export function WorkoutPage({
               variant="ghost"
               size="sm"
               onClick={handleStartEditBodyWeight}
-              className="h-10 rounded-lg px-3 text-muted-foreground transition-transform duration-150 hover:text-foreground active:scale-[0.97]"
+              className="h-10 rounded-none px-3 text-muted-foreground transition-transform duration-150 hover:text-foreground active:scale-[0.97]"
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} />
               {t.workout.bodyWeight.edit}
@@ -658,7 +665,7 @@ export function WorkoutPage({
         ) : (
           <form
             onSubmit={handleSaveBodyWeight}
-            className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-150"
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-none border border-border/60 bg-muted/20 px-3 py-2 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-150"
           >
             <Label
               htmlFor="body-weight"
@@ -682,7 +689,7 @@ export function WorkoutPage({
                 }}
                 placeholder={t.workout.bodyWeight.placeholder}
                 aria-invalid={bodyWeightFeedback?.type === "error" || undefined}
-                className="h-11 w-24 rounded-xl text-right tabular-nums"
+                className="h-11 w-24 rounded-none text-right tabular-nums"
               />
               <span className="text-sm text-muted-foreground">{t.records.units.kg}</span>
             </div>
@@ -694,7 +701,7 @@ export function WorkoutPage({
                   size="sm"
                   onClick={handleCancelEditBodyWeight}
                   disabled={isSavingBodyWeight}
-                  className="h-11 rounded-xl text-muted-foreground"
+                  className="h-11 rounded-none text-muted-foreground"
                 >
                   {t.common.cancel}
                 </Button>
@@ -704,7 +711,7 @@ export function WorkoutPage({
                 size="sm"
                 loading={isSavingBodyWeight}
                 disabled={!bodyWeightDirty}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-none"
               >
                 {t.workout.bodyWeight.save}
               </Button>
@@ -778,13 +785,13 @@ export function WorkoutPage({
           {/* Thumb-reach action bar: sticks above the mobile bottom nav (and
               its safe-area inset), sits at the bottom of the viewport on
               desktop. Add exercise = primary; Save = quieter outline. */}
-          <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] z-30 flex flex-col gap-2 rounded-2xl border border-border bg-background/90 p-2 shadow-lg shadow-black/30 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 md:bottom-4 md:ml-auto md:w-fit">
+          <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] z-30 flex flex-col gap-2 rounded-none border border-border bg-background/90 p-2 shadow-lg shadow-black/30 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 md:bottom-4 md:ml-auto md:w-fit">
             {(error || successMessage) && <div className="flex flex-col gap-1">{feedback}</div>}
             <div className="flex gap-2">
               <Button
                 type="button"
                 onClick={() => setAddDialogOpen(true)}
-                className="h-12 min-w-0 flex-[1.15] rounded-xl px-3 transition-transform duration-150 active:scale-[0.98] md:flex-none md:px-5"
+                className="h-12 min-w-0 flex-[1.15] rounded-none px-3 transition-transform duration-150 active:scale-[0.98] md:flex-none md:px-5"
               >
                 <Plus className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
                 <span className="truncate">{t.workout.addExercise}</span>
@@ -795,7 +802,7 @@ export function WorkoutPage({
                 onClick={handleSave}
                 loading={isSaving && savingDoneId === null}
                 disabled={isSaving}
-                className="h-12 min-w-0 flex-1 rounded-xl px-3 transition-transform duration-150 active:scale-[0.98] md:flex-none md:px-5"
+                className="h-12 min-w-0 flex-1 rounded-none px-3 transition-transform duration-150 active:scale-[0.98] md:flex-none md:px-5"
               >
                 {!(isSaving && savingDoneId === null) && (
                   <Save className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
@@ -815,17 +822,17 @@ export function WorkoutPage({
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border px-4 py-14 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-none border border-dashed border-border px-4 py-14 text-center">
           <span
             aria-hidden="true"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted/30 text-muted-foreground"
+            className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
           >
             <Dumbbell className="h-6 w-6" strokeWidth={1.5} />
           </span>
           <p className="max-w-xs text-sm text-muted-foreground">{t.workout.emptyStateMessage}</p>
           <Button
             onClick={() => setAddDialogOpen(true)}
-            className="h-12 rounded-xl px-5 transition-transform duration-150 active:scale-[0.98]"
+            className="h-12 rounded-none px-5 transition-transform duration-150 active:scale-[0.98]"
           >
             <Plus className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
             {t.workout.addExercise}

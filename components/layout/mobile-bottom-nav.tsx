@@ -44,7 +44,7 @@ export async function MobileBottomNav() {
                 aria-label={item.label}
                 className="group relative flex min-h-11 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-1 px-1 text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:bg-accent/60 data-[active=true]:text-primary"
               >
-                <span className="pointer-events-none absolute top-0 h-0.5 w-8 scale-x-0 rounded-full bg-primary transition-transform duration-200 group-data-[active=true]:scale-x-100" />
+                <span className="pointer-events-none absolute top-0 h-0.5 w-8 scale-x-0 rounded-none bg-gradient-to-r from-emerald-400 to-cyan-400 transition-transform duration-200 group-data-[active=true]:scale-x-100" />
                 <Icon
                   className="h-5 w-5 shrink-0 transition-transform duration-150 group-active:scale-95 group-data-[active=true]:[stroke-width:2.25]"
                   strokeWidth={1.75}

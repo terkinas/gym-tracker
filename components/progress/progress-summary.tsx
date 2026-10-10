@@ -3,6 +3,7 @@
 import { Dumbbell, Flame, Layers3, ListChecks, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { TONES, type Tone } from "@/components/progress/section-heading";
 import { cn } from "@/lib/utils";
 import type { StreakResult } from "@/lib/progress/analytics";
 import { useLocale, useTranslations } from "@/lib/i18n/locale-context";
@@ -32,30 +33,35 @@ export function ProgressSummary({ kpis, streak }: ProgressSummaryProps) {
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <KpiCard
         icon={Dumbbell}
+        tone="orange"
         label={t.progress.overall.statWorkouts}
         hint={k.workoutsHint}
         value={formatCount(kpis.workouts, locale)}
       />
       <KpiCard
         icon={Layers3}
+        tone="blue"
         label={t.progress.overall.statSets}
         hint={k.setsHint}
         value={formatCount(kpis.sets, locale)}
       />
       <KpiCard
         icon={Trophy}
+        tone="amber"
         label={t.progress.overall.statPrs}
         hint={k.prsHint}
         value={formatCount(kpis.prs, locale)}
       />
       <KpiCard
         icon={ListChecks}
+        tone="violet"
         label={k.exercisesLabel}
         hint={k.exercisesHint}
         value={formatCount(kpis.exercises, locale)}
       />
       <KpiCard
         icon={Flame}
+        tone="orange"
         accent={streak.current > 0}
         className="col-span-2 lg:col-span-1"
         label={t.progress.overall.currentStreak}
@@ -69,48 +75,54 @@ export function ProgressSummary({ kpis, streak }: ProgressSummaryProps) {
 
 function KpiCard({
   icon: Icon,
+  tone,
   label,
   hint,
   value,
   footnote,
-  accent = false,
+  accent = true,
   className,
 }: {
   icon: LucideIcon;
+  tone: Tone;
   label: string;
   hint: string;
   value: string;
   footnote?: string;
+  /** False greys the icon out (e.g. no active streak). */
   accent?: boolean;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-2xl border bg-card p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200",
-        accent ? "border-primary/30" : "border-border",
+        "relative flex min-w-0 flex-col gap-1 overflow-hidden rounded-none border border-border bg-surface p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200",
         className,
       )}
     >
-      <div className="flex items-center gap-2 text-muted-foreground">
+      {accent && (
+        <span
+          aria-hidden="true"
+          className={cn("pointer-events-none absolute -top-10 -right-10 h-28 w-28 blur-2xl", TONES[tone].glow)}
+        />
+      )}
+      <div className="relative flex items-center gap-2.5">
         <span
           aria-hidden="true"
           className={cn(
-            "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border",
-            accent
-              ? "border-primary/30 bg-primary/10 text-primary"
-              : "border-border bg-muted/30",
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-none border",
+            accent ? TONES[tone].tile : "border-border bg-muted/30 text-muted-foreground",
           )}
         >
-          <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+          <Icon className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
         </span>
         <span className="truncate text-sm font-medium text-foreground">{label}</span>
       </div>
-      <span className="mt-1 text-3xl leading-none font-semibold tracking-tight text-foreground tabular-nums">
+      <span className="relative mt-2 text-4xl leading-none font-bold tracking-tight text-foreground tabular-nums">
         {value}
       </span>
-      <span className="text-xs text-muted-foreground">{hint}</span>
-      {footnote && <span className="text-xs font-medium text-muted-foreground">{footnote}</span>}
+      <span className="relative text-xs text-muted-foreground">{hint}</span>
+      {footnote && <span className="relative text-xs font-medium text-muted-foreground">{footnote}</span>}
     </div>
   );
 }

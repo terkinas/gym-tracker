@@ -20,6 +20,13 @@ import { PrismaClient } from "@prisma/client";
 // Prisma manages its own connection pool and transparently replaces pooled
 // connections the database/pooler has closed, so there is deliberately no
 // per-request disconnect/reconnect logic here.
+/** How Prisma loads nested relations (workout -> exercises -> sets, ...).
+ * "join" = one database-level JOIN query per call (needs the `relationJoins`
+ * preview feature in prisma/schema.prisma); "query" = the older behaviour of
+ * one query per relation level. Every nested read in lib/storage passes this
+ * constant, so switching back is a one-word change here. */
+export const RELATION_LOAD_STRATEGY = "join" as const;
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
   prismaInstanceCount: number | undefined;

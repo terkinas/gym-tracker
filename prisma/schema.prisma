@@ -33,7 +33,12 @@
 //   how to opt into a real FK instead, if that's preferred going forward.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  // Loads nested relations (workout -> exercises -> sets, user -> workouts ->
+  // ...) with a single database-level JOIN query instead of one query per
+  // relation level. Same results and ordering; fewer round trips. With the
+  // flag on, "join" becomes the default relationLoadStrategy for every query.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

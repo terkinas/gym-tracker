@@ -75,7 +75,7 @@ function SheetContent({
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-sm text-muted-foreground opacity-80 transition-opacity hover:opacity-100 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none">
+        <SheetPrimitive.Close className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-none text-muted-foreground opacity-80 transition-opacity hover:opacity-100 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none">
           <X className="h-5 w-5" strokeWidth={1.5} />
           <span className="sr-only">{t.common.close}</span>
         </SheetPrimitive.Close>

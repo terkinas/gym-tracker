@@ -27,7 +27,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
       role="group"
       aria-label={t.languageSwitcher.label}
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-md border border-border bg-card p-0.5",
+        "inline-flex items-center gap-0.5 rounded-none border border-border bg-card p-0.5",
         className,
       )}
     >
@@ -47,9 +47,9 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
               });
             }}
             className={cn(
-              "rounded-sm px-2 py-1 max-md:min-h-9 max-md:min-w-9 text-xs font-semibold tracking-wide uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60",
+              "rounded-none px-2 py-1 max-md:min-h-9 max-md:min-w-9 text-xs font-semibold tracking-wide uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60",
               isActive
-                ? "bg-primary text-primary-foreground"
+                ? "bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

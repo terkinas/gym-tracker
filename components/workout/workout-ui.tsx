@@ -20,47 +20,74 @@ import { cn } from "@/lib/utils";
 
 type CategoryMeta = {
   icon: LucideIcon;
-  /** Icon tile: tinted background + border + icon colour (dark UI). */
+  /** Icon tile: vivid gradient fill + white icon + soft glow. */
   tile: string;
   /** Thin accent bar on the card's left edge. */
   bar: string;
+  /** Start colour of the fading hairline under a category heading. */
+  line: string;
+  /** Soft hover wash on exercise cards. */
+  wash: string;
+  /** Text colour (also drives `currentColor` in SVG charts). */
+  text: string;
 };
 
 const CATEGORY_META: Record<ExerciseCategory, CategoryMeta> = {
   Krūtinė: {
     icon: Shield,
-    tile: "border-orange-500/25 bg-orange-500/10 text-orange-300",
-    bar: "bg-orange-400/60",
+    tile: "border-white/20 bg-gradient-to-br from-orange-400 to-rose-500 text-white shadow-md shadow-orange-500/30",
+    bar: "bg-gradient-to-b from-orange-400 to-rose-500",
+    line: "from-orange-400/50",
+    wash: "hover:from-orange-500/10",
+    text: "text-orange-400",
   },
   Pečiai: {
     icon: Mountain,
-    tile: "border-yellow-500/25 bg-yellow-500/10 text-yellow-300",
-    bar: "bg-yellow-400/60",
+    tile: "border-white/20 bg-gradient-to-br from-yellow-300 to-amber-500 text-white shadow-md shadow-yellow-500/30",
+    bar: "bg-gradient-to-b from-yellow-300 to-amber-500",
+    line: "from-yellow-300/50",
+    wash: "hover:from-yellow-500/10",
+    text: "text-yellow-300",
   },
   Bicepsas: {
     icon: BicepsFlexed,
-    tile: "border-green-500/25 bg-green-500/10 text-green-300",
-    bar: "bg-green-400/60",
+    tile: "border-white/20 bg-gradient-to-br from-lime-400 to-green-500 text-white shadow-md shadow-green-500/30",
+    bar: "bg-gradient-to-b from-lime-400 to-green-500",
+    line: "from-lime-400/50",
+    wash: "hover:from-green-500/10",
+    text: "text-lime-400",
   },
   Tricepsas: {
     icon: Dumbbell,
-    tile: "border-teal-500/25 bg-teal-500/10 text-teal-300",
-    bar: "bg-teal-400/60",
+    tile: "border-white/20 bg-gradient-to-br from-cyan-400 to-teal-500 text-white shadow-md shadow-cyan-500/30",
+    bar: "bg-gradient-to-b from-cyan-400 to-teal-500",
+    line: "from-cyan-400/50",
+    wash: "hover:from-cyan-500/10",
+    text: "text-cyan-400",
   },
   Nugara: {
     icon: ArrowUpFromLine,
-    tile: "border-blue-500/25 bg-blue-500/10 text-blue-300",
-    bar: "bg-blue-400/60",
+    tile: "border-white/20 bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-md shadow-blue-500/30",
+    bar: "bg-gradient-to-b from-sky-400 to-blue-600",
+    line: "from-sky-400/50",
+    wash: "hover:from-blue-500/10",
+    text: "text-sky-400",
   },
   Presas: {
     icon: LayoutGrid,
-    tile: "border-purple-500/25 bg-purple-500/10 text-purple-300",
-    bar: "bg-purple-400/60",
+    tile: "border-white/20 bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-md shadow-fuchsia-500/30",
+    bar: "bg-gradient-to-b from-violet-500 to-fuchsia-500",
+    line: "from-violet-500/50",
+    wash: "hover:from-fuchsia-500/10",
+    text: "text-violet-400",
   },
   Kojos: {
     icon: Footprints,
-    tile: "border-red-500/25 bg-red-500/10 text-red-300",
-    bar: "bg-red-400/60",
+    tile: "border-white/20 bg-gradient-to-br from-pink-500 to-red-500 text-white shadow-md shadow-red-500/30",
+    bar: "bg-gradient-to-b from-pink-500 to-red-500",
+    line: "from-pink-500/50",
+    wash: "hover:from-red-500/10",
+    text: "text-pink-500",
   },
 };
 
@@ -68,6 +95,9 @@ const FALLBACK_META: CategoryMeta = {
   icon: Activity,
   tile: "border-border bg-muted/40 text-muted-foreground",
   bar: "bg-border",
+  line: "from-border",
+  wash: "hover:from-accent/40",
+  text: "text-muted-foreground",
 };
 
 /** Accent classes for a category; neutral when the category is unknown (e.g.
@@ -89,7 +119,7 @@ export function CategoryTile({
     <span
       aria-hidden="true"
       className={cn(
-        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-none border",
         tile,
         className,
       )}

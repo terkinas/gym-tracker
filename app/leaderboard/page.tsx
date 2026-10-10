@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Dumbbell, Info, Trophy, User } from "lucide-react";
+import { Crown, Dumbbell, Info, Trophy, User, Users } from "lucide-react";
 
 import { LeaderboardPeriodTabs } from "@/components/leaderboard/leaderboard-period-tabs";
 import { LeaderboardPodium } from "@/components/leaderboard/leaderboard-podium";
 import { LEADERBOARD_GRID, LeaderboardRow } from "@/components/leaderboard/leaderboard-row";
 import { YourPositionCard } from "@/components/leaderboard/your-position-card";
+import { SectionHeading, ToneTile } from "@/components/progress/section-heading";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { getTranslations } from "@/lib/i18n/get-translations";
 import { LEADERBOARD_TOP_N, parseScorePeriod } from "@/lib/progress/analytics";
@@ -58,10 +59,10 @@ export default async function LeaderboardPage({
       </header>
 
       {board.participants === 0 ? (
-        <div className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-border px-5 py-16 text-center">
+        <div className="flex flex-col items-center gap-5 rounded-none border border-dashed border-border px-5 py-16 text-center">
           <span
             aria-hidden="true"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted/30 text-muted-foreground"
+            className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
           >
             <Trophy className="h-6 w-6" strokeWidth={1.5} />
           </span>
@@ -75,7 +76,7 @@ export default async function LeaderboardPage({
           </div>
           <Link
             href="/treniruote"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Dumbbell className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
             {t.leaderboard.emptyState.cta}
@@ -83,27 +84,44 @@ export default async function LeaderboardPage({
         </div>
       ) : (
         <div key={period} className="flex flex-col gap-6 sm:gap-8">
-          <LeaderboardPodium entries={podium} t={t} locale={locale} />
+          <section className="flex flex-col gap-3" aria-labelledby="podium-title">
+            <SectionHeading
+              id="podium-title"
+              icon={Crown}
+              tone="amber"
+              title={t.leaderboard.sections.podium}
+              subtitle={t.leaderboard.sections.podiumSubtitle}
+            />
+            <LeaderboardPodium entries={podium} t={t} locale={locale} />
+          </section>
 
           {rest.length > 0 && (
-            <div className="md:overflow-hidden md:rounded-2xl md:border md:border-border md:bg-card">
-              <div
-                aria-hidden="true"
-                className={`hidden border-b border-border bg-muted/30 px-4 py-2.5 text-xs font-medium text-muted-foreground ${LEADERBOARD_GRID}`}
-              >
-                <span>#</span>
-                <span>{t.leaderboard.columns.name}</span>
-                <span>{t.leaderboard.columns.score}</span>
-                <span className="text-right">{t.leaderboard.columns.progress}</span>
-                <span className="text-right">{t.leaderboard.columns.workouts}</span>
-                <span className="text-right">{t.leaderboard.columns.prs}</span>
+            <section className="flex flex-col gap-3" aria-labelledby="rest-title">
+              <SectionHeading
+                id="rest-title"
+                icon={Users}
+                tone="blue"
+                title={t.leaderboard.sections.rest}
+              />
+              <div className="md:overflow-hidden md:rounded-none md:border md:border-border md:bg-card">
+                <div
+                  aria-hidden="true"
+                  className={`hidden border-b border-border bg-muted/30 px-4 py-2.5 text-xs font-medium text-muted-foreground ${LEADERBOARD_GRID}`}
+                >
+                  <span>#</span>
+                  <span>{t.leaderboard.columns.name}</span>
+                  <span>{t.leaderboard.columns.score}</span>
+                  <span className="text-right">{t.leaderboard.columns.progress}</span>
+                  <span className="text-right">{t.leaderboard.columns.workouts}</span>
+                  <span className="text-right">{t.leaderboard.columns.prs}</span>
+                </div>
+                <ol className="flex flex-col gap-2 md:gap-0 md:divide-y md:divide-border">
+                  {rest.map((entry, index) => (
+                    <LeaderboardRow key={entry.rank} entry={entry} t={t} locale={locale} index={index} />
+                  ))}
+                </ol>
               </div>
-              <ol className="flex flex-col gap-2 md:gap-0 md:divide-y md:divide-border">
-                {rest.map((entry, index) => (
-                  <LeaderboardRow key={entry.rank} entry={entry} t={t} locale={locale} index={index} />
-                ))}
-              </ol>
-            </div>
+            </section>
           )}
 
           {showOwnRowBelow && board.me && (
@@ -111,10 +129,10 @@ export default async function LeaderboardPage({
           )}
 
           {board.me === null && (
-            <section className="flex items-start gap-3 rounded-2xl border border-dashed border-border px-4 py-4 sm:px-5">
+            <section className="flex items-start gap-3 rounded-none border border-dashed border-border px-4 py-4 sm:px-5">
               <span
                 aria-hidden="true"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 text-muted-foreground"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
               >
                 <User className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
               </span>
@@ -127,10 +145,10 @@ export default async function LeaderboardPage({
         </div>
       )}
 
-      <aside className="mt-8 flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 px-4 py-3.5">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} aria-hidden="true" />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 className="text-sm font-medium text-foreground">{t.leaderboard.info.title}</h2>
+      <aside className="mt-8 flex items-start gap-3 rounded-none border border-border bg-card px-4 py-4 sm:px-5">
+        <ToneTile icon={Info} tone="blue" />
+        <div className="flex min-w-0 flex-col gap-1">
+          <h2 className="text-sm font-semibold text-foreground">{t.leaderboard.info.title}</h2>
           <p className="text-xs leading-relaxed text-muted-foreground">{t.leaderboard.info.description}</p>
         </div>
       </aside>

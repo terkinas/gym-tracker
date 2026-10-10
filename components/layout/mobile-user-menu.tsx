@@ -34,7 +34,7 @@ export function MobileUserMenu({ name, username }: MobileUserMenuProps) {
           <button
             type="button"
             aria-label={t.nav.profileMenu}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-accent"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-none text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-accent"
           >
             <CircleUser className="h-6 w-6" strokeWidth={1.75} />
           </button>

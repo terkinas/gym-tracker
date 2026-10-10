@@ -28,6 +28,12 @@ export function ExerciseProgressChart({ data }: ExerciseProgressChartProps) {
   return (
     <ResponsiveContainer width="100%" height={224}>
       <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
+        <defs>
+          <linearGradient id="exercise-line" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#22d3ee" />
+          </linearGradient>
+        </defs>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.6} />
         <XAxis
           dataKey="date"
@@ -60,9 +66,9 @@ export function ExerciseProgressChart({ data }: ExerciseProgressChartProps) {
         <Line
           type="monotone"
           dataKey="value"
-          stroke="var(--primary)"
-          strokeWidth={2}
-          dot={{ r: 3, fill: "var(--primary)" }}
+          stroke="url(#exercise-line)"
+          strokeWidth={3}
+          dot={{ r: 3.5, fill: "#34d399", strokeWidth: 0 }}
           activeDot={{ r: 5 }}
         />
       </LineChart>

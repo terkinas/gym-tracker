@@ -40,11 +40,11 @@ export function OverallProgress({ score, isFallbackPeriod }: OverallProgressProp
     return (
       <section
         aria-labelledby="overall-progress-title"
-        className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border px-5 py-10 text-center"
+        className="flex flex-col items-center gap-4 rounded-none border border-dashed border-border px-5 py-10 text-center"
       >
         <span
           aria-hidden="true"
-          className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted/30 text-muted-foreground"
+          className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
         >
           <TrendingUp className="h-6 w-6" strokeWidth={1.5} />
         </span>
@@ -58,7 +58,7 @@ export function OverallProgress({ score, isFallbackPeriod }: OverallProgressProp
         </div>
         <Link
           href="/treniruote"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Dumbbell className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           {t.progress.ui.noScoreCta}
@@ -70,7 +70,7 @@ export function OverallProgress({ score, isFallbackPeriod }: OverallProgressProp
   return (
     <section
       aria-labelledby="overall-progress-title"
-      className="grid grid-cols-1 gap-6 rounded-2xl border border-border bg-card p-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200 sm:p-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-10"
+      className="grid grid-cols-1 gap-6 rounded-none border border-border bg-surface p-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200 sm:p-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-10"
     >
       <div className="flex items-center gap-5">
         <div className="relative h-32 w-32 shrink-0 sm:h-36 sm:w-36">
@@ -202,12 +202,12 @@ function BreakdownRow({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={fill}
-        className="h-2 w-full overflow-hidden rounded-full bg-muted"
+        className="h-2 w-full overflow-hidden rounded-none bg-muted"
       >
         <div
           className={cn(
-            "h-full rounded-full motion-safe:transition-[width] motion-safe:duration-200",
-            available ? "bg-primary" : "bg-muted-foreground/30",
+            "h-full rounded-none motion-safe:transition-[width] motion-safe:duration-200",
+            available ? "bg-gradient-to-r from-emerald-400 to-cyan-400" : "bg-muted-foreground/30",
           )}
           style={{ width: `${fill}%` }}
         />

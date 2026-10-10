@@ -4,15 +4,17 @@ import { redirect } from "next/navigation";
 import { Dumbbell, Trophy } from "lucide-react";
 
 import { RecordCard, TopRecordCard } from "@/components/records/record-card";
-import { CategoryTile } from "@/components/workout/workout-ui";
+import { SectionHeading } from "@/components/progress/section-heading";
+import { CategoryTile, categoryMeta } from "@/components/workout/workout-ui";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { EXERCISE_CATEGORIES } from "@/lib/exercises";
 import { translateCategory } from "@/lib/i18n/categories";
+import { cn } from "@/lib/utils";
 import { formatCount, pluralizeThree } from "@/lib/i18n/format";
 import { getTranslations } from "@/lib/i18n/get-translations";
 import { calculatePersonalRecords } from "@/lib/progress/analytics";
 import { getExercisesForUser } from "@/lib/storage/exercises";
-import { getWorkoutsForUser } from "@/lib/storage/workouts";
+import { getWorkoutsForAnalytics } from "@/lib/storage/workouts";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getTranslations();
@@ -29,7 +31,7 @@ export default async function RecordsPage() {
   // userId comes from the server session only. Records are derived on every
   // request from the user's saved workouts — nothing is cached or stored.
   const [workouts, exercises] = await Promise.all([
-    getWorkoutsForUser(user.id),
+    getWorkoutsForAnalytics(user.id),
     getExercisesForUser(user.id),
   ]);
   const records = calculatePersonalRecords(workouts);
@@ -79,10 +81,10 @@ export default async function RecordsPage() {
       </header>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-border px-5 py-16 text-center">
+        <div className="flex flex-col items-center gap-5 rounded-none border border-dashed border-border px-5 py-16 text-center">
           <span
             aria-hidden="true"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted/30 text-muted-foreground"
+            className="flex h-12 w-12 items-center justify-center rounded-none border border-border bg-muted/30 text-muted-foreground"
           >
             <Trophy className="h-6 w-6" strokeWidth={1.5} />
           </span>
@@ -96,22 +98,23 @@ export default async function RecordsPage() {
           </div>
           <Link
             href="/treniruote"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-input px-5 text-sm font-medium transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Dumbbell className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
             {t.records.emptyState.cta}
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-9">
           {rows.length > 3 && top.length > 0 && (
-            <section className="flex flex-col gap-3" aria-label={t.records.top.title}>
-              <div className="flex flex-col gap-0.5">
-                <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                  {t.records.top.title}
-                </h2>
-                <p className="text-xs text-muted-foreground">{t.records.top.description}</p>
-              </div>
+            <section className="flex flex-col gap-3" aria-labelledby="top-records-title">
+              <SectionHeading
+                id="top-records-title"
+                icon={Trophy}
+                tone="amber"
+                title={t.records.top.title}
+                subtitle={t.records.top.description}
+              />
               <ol className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 {top.map((exercise, i) => (
                   <TopRecordCard
@@ -130,17 +133,24 @@ export default async function RecordsPage() {
           {groups.map((group) => (
             <section
               key={group.category}
-              className="flex flex-col gap-3"
+              className="flex flex-col gap-3.5"
               aria-label={translateCategory(group.category, t)}
             >
-              <h2 className="flex items-center gap-2.5 text-base font-semibold tracking-tight text-foreground">
-                <CategoryTile category={group.category} className="h-8 w-8 rounded-lg" />
+              <h2 className="flex items-center gap-3 text-lg font-semibold tracking-tight text-foreground">
+                <CategoryTile category={group.category} className="h-9 w-9" />
                 {translateCategory(group.category, t)}
-                <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                <span className="rounded-none border border-border/60 bg-muted/30 px-2 py-0.5 text-xs leading-4 font-medium text-muted-foreground tabular-nums">
                   {formatCount(group.items.length, locale)}
                 </span>
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "h-px flex-1 bg-gradient-to-r to-transparent",
+                    categoryMeta(group.category).line,
+                  )}
+                />
               </h2>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-2.5">
                 {group.items.map((exercise) => (
                   <RecordCard
                     key={exercise.id}

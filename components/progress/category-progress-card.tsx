@@ -22,7 +22,8 @@ export function CategoryProgressCard({ data }: CategoryProgressCardProps) {
   return (
     <div
       className={cn(
-        "relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4",
+        "relative flex flex-col gap-3 overflow-hidden rounded-none border border-border bg-surface bg-gradient-to-r from-transparent to-transparent py-4 pr-4 pl-5 transition-[background-color,border-color] duration-200 hover:border-foreground/20",
+        categoryMeta(data.category).wash,
         !hasWorkouts && "opacity-70",
       )}
     >
@@ -31,7 +32,7 @@ export function CategoryProgressCard({ data }: CategoryProgressCardProps) {
         className={cn("absolute inset-y-0 left-0 w-1", categoryMeta(data.category).bar)}
       />
       <div className="flex items-center gap-3">
-        <CategoryTile category={data.category} />
+        <CategoryTile category={data.category} className="h-12 w-12" />
         <div className="flex min-w-0 flex-1 flex-col">
           <h3 className="truncate text-base font-semibold text-foreground">
             {translateCategory(data.category, t)}
@@ -42,7 +43,7 @@ export function CategoryProgressCard({ data }: CategoryProgressCardProps) {
         </div>
         {hasWorkouts && (
           <span className="shrink-0 text-right">
-            <span className="block text-xl leading-none font-semibold text-foreground tabular-nums">
+            <span className="block text-2xl leading-none font-bold text-foreground tabular-nums">
               {formatCount(data.hardSets, locale)}
             </span>
             <span className="text-xs text-muted-foreground">
@@ -66,13 +67,13 @@ export function CategoryProgressCard({ data }: CategoryProgressCardProps) {
           </p>
 
           {hasChart ? (
-            <div className="h-12 w-full">
+            <div className={cn("h-12 w-full", categoryMeta(data.category).text)}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.hardSetSeries} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="var(--primary)"
+                    stroke="currentColor"
                     strokeWidth={2}
                     dot={false}
                   />

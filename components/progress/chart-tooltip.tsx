@@ -42,7 +42,7 @@ export function ChartTooltip({
   const value = typeof rawValue === "number" ? rawValue : Number(rawValue ?? 0);
 
   return (
-    <div className="rounded-xl border border-border bg-popover px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-none border border-border bg-popover px-3 py-2 text-xs shadow-lg">
       <p className="mb-1 font-medium text-foreground">
         {label !== undefined ? formatDate(String(label), locale) : ""}
       </p>
